@@ -30,6 +30,7 @@ using namespace std;
 
 #define READ   0
 #define WRITE  1
+
 FILE *
 popen2(const char *command, const char *type, int * pid)
 {
@@ -96,31 +97,4 @@ pclose2(FILE * fp, pid_t pid)
   return stat;
 }
 
-#if 0
-int
-main()
-{
-  int pid;
-  string command = "ping 8.8.8.8"; 
-  FILE * fp = popen2(command, "r", pid);
-  char command_out[100] = {0};
-  stringstream output;
-
-  // Using read() so that I have the option of using select()
-  // if I want non-blocking flow
-  while (read(fileno(fp), command_out, sizeof(command_out)-1) != 0) {
-    output << string(command_out);
-    kill(-pid, 9);
-    memset(&command_out, 0, sizeof(command_out));
-  }
-
-  string token;
-  while (getline(output, token, '\n'))
-    printf("OUT: %s\n", token.c_str());
-
-  pclose2(fp, pid);
-
-  return 0;
-}
-#endif
 
