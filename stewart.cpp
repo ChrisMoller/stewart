@@ -582,10 +582,6 @@ update_positions ()
 static void
 init(void)
 {
-  double M0;
-  double N0;
-  double I0;
-  double alpha0 = 0.0;
 
   /***
       page 4
@@ -632,27 +628,6 @@ init(void)
   }
   h0 /= 6.0;
   update_alpha ();
-#if 0
-  N0 = 2.0 * ARM_LENGTH * h0;
-  M0 = 0.0;
-    M0 += 2.0 * (xp - xb);
-
-  double I02 = 0.0;
-  for (int i = 0; i < 6; i++) {
-    double xp = platform->anchors[i].x;		// anchor
-    double yp = platform->anchors[i].y;		// anchor
-    double xb = servos[i]->pos.x;		// servo
-    double yb = servos[i]->pos.y;		// servo
-    I02 += pow ((xp - xb), 2.0) + pow ((yp - yb), 2.0) + pow (h0, 2.0);
-  }
-  I0 = sqrt (I02 / 6.0);
-  M0 /= 6.0;
-  alpha0 = asin (I0 / sqrt (pow (M0, 2.0) + pow (N0, 2.0))) -
-    atan2 (M0, N0);
-  //  fprintf (stderr, "h0 = %g, M = %g, N = %g I0 = %g, alpha0 = %g\n",
-  //	   h0, M0, N0, I0, alpha0);
-#endif
-
 	     
   GLfloat white[]       = { 1.0, 1.0, 1.0, 1.0 };
   GLfloat black[]       = { 0.0, 0.0, 0.0, 1.0 };
