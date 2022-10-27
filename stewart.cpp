@@ -438,77 +438,130 @@ enum {
 
 int jitter_mode = JITTER_ATTACK;
 
+static unsigned int
+do_jitter ()
+{
+  unsigned int sleep_time = 10000;
+  static double target_x;
+  static double target_y;
+  static double target_z;
+  static double target_p;
+  static double target_t;
+  static double target_r;
+  static double attack_stage;
+  static double base_x;
+  static double base_y;
+  static double base_z;
+  static double base_p;
+  static double base_t;
+  static double base_r;
+  switch (jitter_mode) {
+  case JITTER_QUIET:		// do nothing
+    break;
+  case JITTER_ATTACK:
+    base_x = platform->delta_x;
+    base_y = platform->delta_y;
+    base_z = platform->delta_y;
+    base_p = platform->phi;
+    base_t = platform->theta;
+    base_r = platform->rho;
+	
+    target_x = 2.0 * (drand48 () - 0.5);
+    target_y = 2.0 * (drand48 () - 0.5);
+    target_z = 2.0 * (drand48 () - 0.5);
+    target_p= 0.2 * (drand48 () - 0.5);
+    target_t = 0.2 * (drand48 () - 0.5);
+    target_r   = 0.2 * (drand48 () - 0.5);
+    attack_stage = 0.0;
+    jitter_mode = JITTER_ATTACK_CONTINUE;
+    //break;					no break
+  case JITTER_ATTACK_CONTINUE:
+    if (attack_stage < 10.0) {
+      platform->delta_x = base_x + target_x * attack_stage / 10.0;
+      platform->delta_y = base_x + target_y * attack_stage / 10.0; 
+      platform->delta_z = base_x + target_z * attack_stage / 10.0; 
+      platform->phi     = base_x + target_p * attack_stage / 10.0;
+      platform->theta   = base_x + target_t * attack_stage / 10.0; 
+      platform->rho     = base_x + target_r * attack_stage / 10.0; 
+      attack_stage += 0.2;
+      sleep_time = 10000;
+    }
+    else jitter_mode = JITTER_DECAY;
+    break;
+  case JITTER_DECAY:
+    if (attack_stage > 0.0) {
+      platform->delta_x = target_x * attack_stage / 10.0;
+      platform->delta_y = target_y * attack_stage / 10.0; 
+      platform->delta_z = target_z * attack_stage / 10.0; 
+      platform->phi     = target_p * attack_stage / 10.0;
+      platform->theta   = target_t * attack_stage / 10.0; 
+      platform->rho     = target_r * attack_stage / 10.0; 
+      attack_stage -= 0.1;
+      sleep_time = 50000;
+    }
+    else {
+      jitter_mode = JITTER_ATTACK;
+      sleep_time = 3000000;
+    }
+    break;
+  }
+  return sleep_time;
+}
+
+static void
+update_alpha ()
+{
+  // Eq 1
+  glm::mat4 xrot =	// pitch
+    glm::rotate ((float)platform->theta, glm::vec3 (1.0f, 0.0f, 0.0f));
+  glm::mat4 yrot =	// roll
+    glm::rotate ((float)platform->rho, glm::vec3 (0.0f, 1.0f, 0.0f));
+  glm::mat4 zrot =	// yaw
+    glm::rotate ((float)platform->phi, glm::vec3 (0.0f, 0.0f, 1.0f));
+  glm::mat4 compositeRotation = xrot * yrot * zrot;
+
+  double alpha[6];
+  for (int i = 0; i < servos.size (); i++)
+    alpha[i] = servos[i]->alpha;	// fixme freeze if isnan
+  
+  // Eq 3
+  for (int i = 0; i < servos.size (); i++) {
+    glm::vec4 P =
+      glm::vec4 ((float)platform->delta_x,
+		 (float)(platform->delta_y + h0),
+		 (float)platform->delta_z, 1.0f) +
+      (compositeRotation *
+       glm::vec4 ((float)platform->anchors[i].x,
+		  (float)platform->anchors[i].y,
+		  (float)platform->anchors[i].z, 1.0f));
+
+    glm::vec3 B = glm::vec3 (servos[i]->pos.x, 0.0, servos[i]->pos.y);
+
+    glm::vec3 deltaPB = glm::vec3 (P) - B;
+
+    double beta = (i & 1) ? (M_PI/6.0) : (-M_PI/6.0);
+    double l = (double)glm::length (deltaPB);
+    double L  =
+      pow (l, 2.0) - (pow (LEG_LENGTH, 2.0) - pow (ARM_LENGTH, 2.0));
+    double M  = 2.0 * ARM_LENGTH * deltaPB.y;
+    double N  = 2.0 * ARM_LENGTH *
+      (deltaPB.x * cos (beta) + deltaPB.z * sin (beta));
+    N = -fabs (N);
+    double arg = L / sqrt (pow (M, 2.0) + pow (N, 2.0));
+    double alpha = asin (arg) - atan2 (N, M);
+    servos[i]->alpha = (i&1) ? -alpha : alpha;
+  }
+}
+
 static void
 update_positions ()
 {
   unsigned int sleep_time = 10000;
   if (do_motion) {
-    if (demo_mode) {		// jitter
-      static double target_x;
-      static double target_y;
-      static double target_z;
-      static double target_p;
-      static double target_t;
-      static double target_r;
-      static double attack_stage;
-      static double base_x;
-      static double base_y;
-      static double base_z;
-      static double base_p;
-      static double base_t;
-      static double base_r;
-      switch (jitter_mode) {
-      case JITTER_QUIET:		// do nothing
-	break;
-      case JITTER_ATTACK:
-	base_x = platform->delta_x;
-	base_y = platform->delta_y;
-	base_z = platform->delta_y;
-	base_p = platform->phi;
-	base_t = platform->theta;
-	base_r = platform->rho;
-	
-	target_x = 2.0 * (drand48 () - 0.5);
-	target_y = 2.0 * (drand48 () - 0.5);
-	target_z = 2.0 * (drand48 () - 0.5);
-	target_p= 0.2 * (drand48 () - 0.5);
-	target_t = 0.2 * (drand48 () - 0.5);
-	target_r   = 0.2 * (drand48 () - 0.5);
-	attack_stage = 0.0;
-	jitter_mode = JITTER_ATTACK_CONTINUE;
-	//break;					no break
-      case JITTER_ATTACK_CONTINUE:
-	if (attack_stage < 10.0) {
-	  platform->delta_x = base_x + target_x * attack_stage / 10.0;
-	  platform->delta_y = base_x + target_y * attack_stage / 10.0; 
-	  platform->delta_z = base_x + target_z * attack_stage / 10.0; 
-	  platform->phi     = base_x + target_p * attack_stage / 10.0;
-	  platform->theta   = base_x + target_t * attack_stage / 10.0; 
-	  platform->rho     = base_x + target_r * attack_stage / 10.0; 
-	  attack_stage += 0.2;
-	  sleep_time = 10000;
-	}
-	else jitter_mode = JITTER_DECAY;
-	break;
-      case JITTER_DECAY:
-	if (attack_stage > 0.0) {
-	  platform->delta_x = target_x * attack_stage / 10.0;
-	  platform->delta_y = target_y * attack_stage / 10.0; 
-	  platform->delta_z = target_z * attack_stage / 10.0; 
-	  platform->phi     = target_p * attack_stage / 10.0;
-	  platform->theta   = target_t * attack_stage / 10.0; 
-	  platform->rho     = target_r * attack_stage / 10.0; 
-	  attack_stage -= 0.1;
-	  sleep_time = 50000;
-	}
-	else {
-	  jitter_mode = JITTER_ATTACK;
-	  sleep_time = 3000000;
-	}
-	break;
-      }
+    if (demo_mode) {
+      sleep_time = do_jitter ();
     }
-    else {
+    else {		// simple automation
       for (int i = 0; i < servos.size (); i++) {
 	servos[i]->alpha += servos[i]->alpha_incr;
 	if (servos[i]->alpha >  3.0 * M_PI_2 ||
@@ -516,48 +569,8 @@ update_positions ()
 	  servos[i]->alpha_incr = -servos[i]->alpha_incr;
       }
     }
-    
-    // Eq 1
-    glm::mat4 xrot =	// pitch
-      glm::rotate ((float)platform->theta, glm::vec3 (1.0f, 0.0f, 0.0f));
-    glm::mat4 yrot =	// roll
-      glm::rotate ((float)platform->rho, glm::vec3 (0.0f, 1.0f, 0.0f));
-    glm::mat4 zrot =	// yaw
-      glm::rotate ((float)platform->phi, glm::vec3 (0.0f, 0.0f, 1.0f));
-    glm::mat4 compositeRotation = xrot * yrot * zrot;
 
-    double alpha[6];
-    for (int i = 0; i < servos.size (); i++)
-      alpha[i] = servos[i]->alpha;
-
-    // Eq 3
-
-    for (int i = 0; i < servos.size (); i++) {
-      glm::vec4 P =
-	glm::vec4 ((float)platform->delta_x,
-		   (float)(platform->delta_y + h0),
-		   (float)platform->delta_z, 1.0f) +
-	(compositeRotation *
-	 glm::vec4 ((float)platform->anchors[i].x,
-		    (float)platform->anchors[i].y,
-		    (float)platform->anchors[i].z, 1.0f));
-
-      glm::vec3 B = glm::vec3 (servos[i]->pos.x, 0.0, servos[i]->pos.y);
-
-      glm::vec3 deltaPB = glm::vec3 (P) - B;
-
-      double beta = (i & 1) ? (M_PI/6.0) : (-M_PI/6.0);
-      double l = (double)glm::length (deltaPB);
-      double L  =
-	pow (l, 2.0) - (pow (LEG_LENGTH, 2.0) - pow (ARM_LENGTH, 2.0));
-      double M  = 2.0 * ARM_LENGTH * deltaPB.y;
-      double N  = 2.0 * ARM_LENGTH *
-	(deltaPB.x * cos (beta) + deltaPB.z * sin (beta));
-      N = -fabs (N);
-      double arg = L / sqrt (pow (M, 2.0) + pow (N, 2.0));
-      double alpha = asin (arg) - atan2 (N, M);
-      servos[i]->alpha = (i&1) ? -alpha : alpha;
-    }
+    update_alpha ();
     
     if (one_shot) enditall (0);
   }
