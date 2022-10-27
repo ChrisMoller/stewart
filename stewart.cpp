@@ -324,20 +324,7 @@ bool one_shot  = false;
 bool do_motion = true;
 bool demo_mode = false;
 
-/*****  constants *****/
-
-#define W0	1500 // usec, pulse width for straight up
-
-// not sure about this
-#define SERVO_RATE  1000 / M_PI 	// about 318 usec/radian
-
-double h0;
-double M0;
-double N0;
-double I0;
-double alpha0 = 0.0;
-
-/*****  variables *****/
+double h0;				// base height based on geometry
 
 static void
 set_colours (int i)
@@ -484,7 +471,7 @@ do_jitter ()
       platform->theta   = base_x + target_t * attack_stage / 10.0; 
       platform->rho     = base_x + target_r * attack_stage / 10.0; 
       attack_stage += 0.2;
-      sleep_time = 10000;
+      sleep_time = 1000;
     }
     else jitter_mode = JITTER_DECAY;
     break;
@@ -511,6 +498,13 @@ do_jitter ()
 static void
 update_alpha ()
 {
+  /***
+
+      Based on the paper "The Mathematics of the Stewart Platform" from
+https://content.instructables.com/ORIG/FFI/8ZXW/I55MMY14/FFI8ZXWI55MMY14.pdf
+
+  ***/
+  
   // Eq 1
   glm::mat4 xrot =	// pitch
     glm::rotate ((float)platform->theta, glm::vec3 (1.0f, 0.0f, 0.0f));
@@ -523,8 +517,8 @@ update_alpha ()
   double alpha_stage[6];
   bool is_valid = true;
   
-  // Eq 3
   for (int i = 0; i < servos.size (); i++) {
+    // Eq 3
     glm::vec4 P =
       glm::vec4 ((float)platform->delta_x,
 		 (float)(platform->delta_y + h0),
@@ -538,6 +532,7 @@ update_alpha ()
 
     glm::vec3 deltaPB = glm::vec3 (P) - B;
 
+    // Eq 9
     double beta = (i & 1) ? (M_PI/6.0) : (-M_PI/6.0);
     double l = (double)glm::length (deltaPB);
     double L  =
@@ -587,6 +582,11 @@ update_positions ()
 static void
 init(void)
 {
+  double M0;
+  double N0;
+  double I0;
+  double alpha0 = 0.0;
+
   /***
       page 4
       
@@ -619,7 +619,6 @@ init(void)
 
    ***/
   h0 = 0.0;					// Eq 10
-  M0 = 0.0;
   for (int i = 0; i < 6; i++) {
     double xp = platform->anchors[i].x;		// anchor
     double yp = platform->anchors[i].y;		// anchor
@@ -630,10 +629,13 @@ init(void)
 		(pow ((xp - xb), 2.0) +
 		pow ((yp - yb), 2.0)));
 
-    M0 += 2.0 * (xp - xb);
   }
   h0 /= 6.0;
+  update_alpha ();
+#if 0
   N0 = 2.0 * ARM_LENGTH * h0;
+  M0 = 0.0;
+    M0 += 2.0 * (xp - xb);
 
   double I02 = 0.0;
   for (int i = 0; i < 6; i++) {
@@ -649,6 +651,7 @@ init(void)
     atan2 (M0, N0);
   //  fprintf (stderr, "h0 = %g, M = %g, N = %g I0 = %g, alpha0 = %g\n",
   //	   h0, M0, N0, I0, alpha0);
+#endif
 
 	     
   GLfloat white[]       = { 1.0, 1.0, 1.0, 1.0 };
@@ -855,8 +858,10 @@ show_servos (glm::mat4 &baseXform)
 	  glm::translate (currentMtx, glm::vec3 (0.0f, 0.0f, -1.0f));  // 687
 	glm::mat4 x90Mtx   =
 	  glm::rotate ((float)M_PI_2, glm::vec3 (1.0f, 0.0f, 0.0f));
-	glm::mat4 alphaMtx =
-	  glm::rotate ((float)servos[i]->alpha, glm::vec3 (0.0f, 1.0f, 0.0f));
+	double adjAlpha = (i&1) ? -M_PI_2 : M_PI_2;
+	glm::mat4 alphaMtx = 
+	  glm::rotate ((float)(servos[i]->alpha +adjAlpha),
+		       glm::vec3 (0.0f, 1.0f, 0.0f));
 	glPushMatrix();
 	glm::mat4 fMtx = interMatrix * x90Mtx * alphaMtx;
 	glLoadMatrixf (glm::value_ptr (baseXform * fMtx));
@@ -1184,7 +1189,10 @@ keyboard (unsigned char key, int x, int y)
       fprintf (stderr, "m   - motion on/off\n");
       break;
     case 'm':
-      do_motion = !do_motion;
+      do_motion = false;
+      break;
+    case 'M':
+      do_motion = true;
       break;
     }
   }
@@ -1194,6 +1202,7 @@ int
 main(int argc, char **argv)
 {
   signal (SIGINT, enditall);
+  srand48 (time (NULL));
 
   {
     static struct option long_options[] = {
@@ -1202,13 +1211,14 @@ main(int argc, char **argv)
       {"record",	optional_argument, 0,  'r' },
       {"once",		no_argument,       0,  'o' },
       {"demo",		no_argument, 	   0,  'd' },
+      {"motion",	no_argument, 	   0,  'm' },
       {0, 0, 0, 0 }
     };
 
     int c = 0;
     int option_index = 0;
     while (c != -1) {
-      c = getopt_long(argc, argv, "h:w:r::od", long_options, &option_index);
+      c = getopt_long(argc, argv, "h:w:r::odm", long_options, &option_index);
       switch(c) {
       case 'w':
 	if (optarg) width = atoi (optarg);
@@ -1224,6 +1234,10 @@ main(int argc, char **argv)
 	break;
       case 'd':
 	demo_mode = true;
+	do_motion = true;
+	break;
+      case 'm':
+	do_motion = true;
 	break;
       }
     }
