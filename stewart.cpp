@@ -520,9 +520,8 @@ update_alpha ()
     glm::rotate ((float)platform->phi, glm::vec3 (0.0f, 0.0f, 1.0f));
   glm::mat4 compositeRotation = xrot * yrot * zrot;
 
-  double alpha[6];
-  for (int i = 0; i < servos.size (); i++)
-    alpha[i] = servos[i]->alpha;	// fixme freeze if isnan
+  double alpha_stage[6];
+  bool is_valid = true;
   
   // Eq 3
   for (int i = 0; i < servos.size (); i++) {
@@ -549,7 +548,15 @@ update_alpha ()
     N = -fabs (N);
     double arg = L / sqrt (pow (M, 2.0) + pow (N, 2.0));
     double alpha = asin (arg) - atan2 (N, M);
-    servos[i]->alpha = (i&1) ? -alpha : alpha;
+    if (isnan (alpha)) {
+      is_valid = false;
+      break;
+    }
+    else alpha_stage[i] = (i&1) ? -alpha : alpha;
+  }
+  if (is_valid) {
+    for (int i = 0; i < servos.size (); i++)
+      servos[i]->alpha = alpha_stage[i];
   }
 }
 
