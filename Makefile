@@ -1,10 +1,10 @@
-   CFLAGS = -g `pkg-config --cflags freetype2`
-GL_CFLAGS = -g
-#GL_CFLAGS = -g `pkg-config --cflags freetype2`
+   CFLAGS = -O2 `pkg-config --cflags freetype2`
+GL_CFLAGS = -)2
   LDFLAGS =
      LIBS = -lm
 #     LIBS = -lm `pkg-config --libs freetype2`
   GL_LIBS = -lGL -lGLU -lGLEW -lglut
+  SOURCES = LICENSE  Makefile  popen2.cpp  popen2.h  README.md  stewart.cpp
 
 %.o:%.cpp
 	g++ -c $(GL_CFLAGS) $<
@@ -17,3 +17,8 @@ clean:
 
 veryclean: clean
 	rm -f stewart
+
+stewart.zip: $(SOURCES)
+	zip -u $@ $^
+
+zip: stewart.zip
