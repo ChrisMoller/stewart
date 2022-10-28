@@ -87,7 +87,6 @@ Platform myPlatform;
 Base myBase;
 
 double h0;
-
  
 // x-axis
 static BLA::Matrix<4,4> rotatePitch(double r)
@@ -189,7 +188,6 @@ static void update_alpha()
   
 
     double l = length (deltaPB);
-    //Serial.print(i); Serial.print(" l = "); Serial.println(l);
 
     double L  =
       (l * l) - ((LEG_LENGTH * LEG_LENGTH) - 
@@ -258,7 +256,6 @@ void
 loop() {
 
   for(int i=0; i< NUM_SERVOS; i++) {
-
     myServo[i].write( alpha[i]);
   }
   myPlatform.yaw += pincr;
@@ -269,54 +266,9 @@ loop() {
   else if (myPlatform.yaw < -10.0) {
     pincr = -pincr;
     myPlatform.yaw = -10.0;
- }
- update_alpha();
- delay( 2);
-
-
-#if 0
-      alpha[i] += incr[i];
-      if (alpha[i] > 180.0) {
-        incr[i] = -incr[i];
-        alpha[i] = 180.0;
-      }
-      if (alpha[i] < 0.0) {
-        incr[i] = -incr[i];
-        alpha[i] = 0.0;
-      }
-#endif
   }
+  update_alpha();
+  delay( 2);
+}
 
-
-
-
-#if 0
-  for (int a = 0; a<15; a++) {
-    for(int i=0; i< NUM_SERVOS; i++) {
-      myServo[i].write( random( 0, 181));
-      delay( 2);
-    }
-    delay( 150);
-  }
-  
-  for( int i=0; i<NUM_SERVOS; i++)  {
-    myServo[i].write( 0); // set to horn rotated left
-  }
-  delay( 1000);
-
-  for( int a=0; a<3; a++) {
-    for( int r=0; r<=180; r++) {     // move horns right
-      for( int i=0; i<NUM_SERVOS; i++)  {
-        myServo[i].write( r);
-      }
-      delay( 6);
-    }
-    for( int r=180; r>=0; r--) {
-      for( int i=0; i<NUM_SERVOS; i++) { //horns left
-        myServo[i].write( r);
-      }
-      delay( 6);
-    }
-  }
-#endif
 
