@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "author": "C. H. L. Moller",
+  "editor": "wokwi",
+  "serialMonitor": {
+    "display": "auto",
+    "newline": "none"
+   },
+  "parts": [
+    { "type": "wokwi-arduino-uno", "id": "uno", "top": 0, "left": 0, "rotate": 90, "attrs": {} },
+    {
+      "type": "wokwi-servo",
+      "id": "servo0",
+      "top": -150.85,
+      "left": 305.41,
+      "attrs": { "hornColor": "Red" }
+    },
+    {
+      "type": "wokwi-servo",
+      "id": "servo1",
+      "top": -27.05,
+      "left": 312.16,
+      "attrs": { "hornColor": "Red" }
+    },
+    {
+      "type": "wokwi-servo",
+      "id": "servo2",
+      "top": 100,
+      "left": 320,
+      "attrs": { "hornColor": "Red" }
+    },
+    {
+      "type": "wokwi-servo",
+      "id": "servo3",
+      "top": 225.97,
+      "left": 306.76,
+      "attrs": { "hornColor": "Red" }
+    },
+    {
+      "type": "wokwi-servo",
+      "id": "servo4",
+      "top": 343.28,
+      "left": 297.84,
+      "attrs": { "hornColor": "Red" }
+    },
+    {
+      "type": "wokwi-servo",
+      "id": "servo5",
+      "top": 464.92,
+      "left": 283.5,
+      "attrs": { "hornColor": "Red" }
+    }
+  ],
+  "connections": [
+    [ "uno:11", "servo0:PWM", "Red", [] ],
+    [ "uno:10", "servo1:PWM", "Red", [] ],
+    [ "uno:9", "servo2:PWM", "Red", [] ],
+    [ "uno:6", "servo3:PWM", "Red", [] ],
+    [ "uno:5", "servo4:PWM", "Red", [] ],
+    [ "uno:3", "servo5:PWM", "Red", [] ]
+  ]
+}

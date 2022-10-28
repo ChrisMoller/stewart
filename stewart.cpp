@@ -513,6 +513,7 @@ https://content.instructables.com/ORIG/FFI/8ZXW/I55MMY14/FFI8ZXWI55MMY14.pdf
   glm::mat4 zrot =	// yaw
     glm::rotate ((float)platform->phi, glm::vec3 (0.0f, 0.0f, 1.0f));
   glm::mat4 compositeRotation = xrot * yrot * zrot;
+  showMatrix ("cRot", compositeRotation);
 
   double alpha_stage[6];
   bool is_valid = true;
@@ -527,6 +528,22 @@ https://content.instructables.com/ORIG/FFI/8ZXW/I55MMY14/FFI8ZXWI55MMY14.pdf
        glm::vec4 ((float)platform->anchors[i].x,
 		  (float)platform->anchors[i].y,
 		  (float)platform->anchors[i].z, 1.0f));
+    showVector ("P", P);
+    glm::vec4 P0 =
+      glm::vec4 ((float)platform->delta_x,
+		 (float)(platform->delta_y + h0),
+		 (float)platform->delta_z, 1.0f);
+    showVector ("P0", P0);
+    glm::vec4 P1 = glm::vec4 ((float)platform->anchors[i].x,
+		  (float)platform->anchors[i].y,
+		  (float)platform->anchors[i].z, 1.0f);
+    showVector ("P1", P1);
+
+    glm::vec4 xx = (compositeRotation *
+       glm::vec4 ((float)platform->anchors[i].x,
+		  (float)platform->anchors[i].y,
+		  (float)platform->anchors[i].z, 1.0f));
+    showVector ("xx", xx);
 
     glm::vec3 B = glm::vec3 (servos[i]->pos.x, 0.0, servos[i]->pos.y);
 
@@ -535,11 +552,18 @@ https://content.instructables.com/ORIG/FFI/8ZXW/I55MMY14/FFI8ZXWI55MMY14.pdf
     // Eq 9
     double beta = (i & 1) ? (M_PI/6.0) : (-M_PI/6.0);
     double l = (double)glm::length (deltaPB);
+    showVector3 ("deltaPB", deltaPB);
+    fprintf (stderr, "%d l = %g\n", i, l);
     double L  =
       pow (l, 2.0) - (pow (LEG_LENGTH, 2.0) - pow (ARM_LENGTH, 2.0));
+    fprintf (stderr, "%d L = %g %g %g\n",
+	     i, L, pow (l, 2.0), pow (LEG_LENGTH, 2.0) - pow (ARM_LENGTH, 2.0)
+	     );
     double M  = 2.0 * ARM_LENGTH * deltaPB.y;
+    fprintf (stderr, "%d M = %g\n", i, M);
     double N  = 2.0 * ARM_LENGTH *
       (deltaPB.x * cos (beta) + deltaPB.z * sin (beta));
+    fprintf (stderr, "%d N = %g\n", i, N);
     N = -fabs (N);
     double arg = L / sqrt (pow (M, 2.0) + pow (N, 2.0));
     double alpha = asin (arg) - atan2 (N, M);
