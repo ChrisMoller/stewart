@@ -15,7 +15,7 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 Stewart. If not, see <https://www.gnu.org/licenses/>.
  ***/
- 
+
 #include <Servo.h>
 #include <BasicLinearAlgebra.h>
 
@@ -105,6 +105,7 @@ Platform myPlatform;
 Base myBase;
 
 double h0;
+
  
 // x-axis
 static BLA::Matrix<4,4> rotatePitch(double r)
@@ -187,7 +188,7 @@ static void update_alpha()
     BLA::Matrix<4> P0 = {myPlatform.dx,
                         myPlatform.dy + h0,
                         myPlatform.dz, 1.0}; 
-    //showVector("P0", P0);
+    
     BLA::Matrix<4> P1 = {myPlatform.anchor[i].x,
                          myPlatform.anchor[i].y,
                          myPlatform.anchor[i].z, 
@@ -204,14 +205,13 @@ static void update_alpha()
     // Eq 9
     double beta = (i & 1) ? (M_PI/6.0) : (-M_PI/6.0);
   
-
     double l = length (deltaPB);
+    //Serial.print(i); Serial.print(" l = "); Serial.println(l);
 
     double L  =
       (l * l) - ((LEG_LENGTH * LEG_LENGTH) - 
                  (ARM_LENGTH * ARM_LENGTH));
 
-    
     double M  = 2.0 * ARM_LENGTH * deltaPB(1);
     double N  = 2.0 * ARM_LENGTH *
       (deltaPB(0) * cos (beta) + deltaPB(2) * sin (beta));
@@ -252,6 +252,14 @@ setup() {
   myServo[3].attach( 6);
   myServo[4].attach( 5);
   myServo[5].attach( 3);
+  pinMode(A0, INPUT);         // x
+  pinMode(A1, INPUT);         // y
+  //pinMode(A2, INPUT);       // z 
+  pinMode(A3, INPUT);         // roll
+  pinMode(A4, INPUT);         // pitch
+  //pinMode(A5, INPUT);       // yaw
+  pinMode(2, INPUT_PULLUP);   // r0n/stop
+  pinMode(4, INPUT_PULLUP);   // position/rotation
 
   h0 = 0.0;					// Eq 10
   for (int i = 0; i < 6; i++) {
@@ -272,21 +280,44 @@ setup() {
 
 void 
 loop() {
+  static bool runState = true;
+#if 0
+  byte posrot = digitalRead(4);
+  Serial.println(posrot);
+  int movx = map(analogRead(A0), 0, 1023, -1000, 1000);
+  int movy = map(analogRead(A1), 0, 1023, -1000, 1000);
+  //int movz = map(analogRead(A2), 0, 1023, -1000, 1000);
+  int movr = map(analogRead(A3), 0, 1023, -1000, 1000);
+  int movp = map(analogRead(A4), 0, 1023, -1000, 1000);
+  //int movy = map(analogRead(A5), 0, 1023, -1000, 1000);
+#endif
+  {
+    static byte preveState = HIGH;
+    byte btn = digitalRead(2);
+    if (btn == LOW && preveState == HIGH) {
+      runState = !runState;
+    }
+    preveState = btn;
+  //Serial.println(btn);
+  }
 
   for(int i=0; i< NUM_SERVOS; i++) {
     myServo[i].write( alpha[i]);
   }
-  myPlatform.yaw += pincr;
-  if (myPlatform.yaw > 10.0) {
-    pincr = -pincr;
-    myPlatform.yaw = 10.0;
+  
+  if (runState) {
+    myPlatform.yaw += pincr;
+    if (myPlatform.yaw > 10.0) {
+      pincr = -pincr;
+      myPlatform.yaw = 10.0;
+    }
+    else if (myPlatform.yaw < -10.0) {
+      pincr = -pincr;
+      myPlatform.yaw = -10.0;
+   }
+   update_alpha();
   }
-  else if (myPlatform.yaw < -10.0) {
-    pincr = -pincr;
-    myPlatform.yaw = -10.0;
-  }
-  update_alpha();
-  delay( 2);
+ delay( 2);
 }
 
 

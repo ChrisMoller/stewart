@@ -2,12 +2,15 @@
   "version": 1,
   "author": "C. H. L. Moller",
   "editor": "wokwi",
-  "serialMonitor": {
-    "display": "auto",
-    "newline": "none"
-   },
   "parts": [
-    { "type": "wokwi-arduino-uno", "id": "uno", "top": 0, "left": 0, "rotate": 90, "attrs": {} },
+    {
+      "type": "wokwi-arduino-uno",
+      "id": "uno",
+      "top": -4.79,
+      "left": -33.82,
+      "rotate": 90,
+      "attrs": {}
+    },
     {
       "type": "wokwi-servo",
       "id": "servo0",
@@ -49,6 +52,38 @@
       "top": 464.92,
       "left": 283.5,
       "attrs": { "hornColor": "Red" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 317.96,
+      "left": 211.25,
+      "rotate": 90,
+      "attrs": { "color": "green", "label": "Run/Stop", "bounce": "0" }
+    },
+    {
+      "type": "wokwi-analog-joystick",
+      "id": "joystick1",
+      "top": 49.54,
+      "left": -222.38,
+      "rotate": 270,
+      "attrs": { "bounce": "0" }
+    },
+    {
+      "type": "wokwi-analog-joystick",
+      "id": "joystick2",
+      "top": 196.72,
+      "left": -219.85,
+      "rotate": 270,
+      "attrs": { "bounce": "0" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn2",
+      "top": 308.23,
+      "left": -56.85,
+      "rotate": 90,
+      "attrs": { "color": "green", "label": "Position", "bounce": "0" }
     }
   ],
   "connections": [
@@ -57,6 +92,15 @@
     [ "uno:9", "servo2:PWM", "Red", [] ],
     [ "uno:6", "servo3:PWM", "Red", [] ],
     [ "uno:5", "servo4:PWM", "Red", [] ],
-    [ "uno:3", "servo5:PWM", "Red", [] ]
-  ]
+    [ "uno:3", "servo5:PWM", "Red", [] ],
+    [ "uno:GND.1", "btn1:1.l", "black", [ "h0" ] ],
+    [ "uno:2", "btn1:2.l", "green", [ "h0" ] ],
+    [ "uno:A1", "joystick1:VERT", "green", [ "h-84", "v-63.89", "h2.2" ] ],
+    [ "uno:A0", "joystick1:HORZ", "green", [ "h-76.67", "v-65.3" ] ],
+    [ "uno:A3", "joystick2:HORZ", "green", [ "h-76.67", "v-65.39" ] ],
+    [ "uno:A4", "joystick2:VERT", "green", [ "h-67.87", "v64.21" ] ],
+    [ "uno:GND.2", "btn2:2.l", "black", [ "h-41.17", "v2.88" ] ],
+    [ "uno:4", "btn2:1.l", "green", [ "h23.13", "v62.21", "h-224.99" ] ]
+  ],
+  "serialMonitor": { "display": "auto", "newline": "none" }
 }
