@@ -268,10 +268,10 @@ setup() {
     double yp = myPlatform.anchor[i].y;
     double xb = myBase.pos[i].x;
     double yb = myBase.pos[i].y;
-    h0 += sqrt (pow (LEG_LENGTH, 2.0) +
-		   pow (ARM_LENGTH, 2.0) -
-		  (pow ((xp - xb), 2.0) +
-		   pow ((yp - yb), 2.0)));
+    h0 += sqrt ( (LEG_LENGTH * LEG_LENGTH) +
+		    (ARM_LENGTH * ARM_LENGTH) -
+		  ( ((xp - xb) * (xp - xb)) +
+		    ((yp - yb) * (yp - yb))));
   }
   h0 /= 6.0;
   update_alpha ();
