@@ -56,7 +56,9 @@ except that the latter includes a small display screen showing things like
 the platform position and orientation and jitter positional and rotational
 parameters.  Both designs include both a hardware description, primarily in
 the form of a diagram.json file, and the Arduino code, in sketch.ino files,
-necessary to implement the necessary function.
+necessary to implement the necessary function.  (The non-display version of
+the hardware is based on the Arduino Uno card while, due to pin-out
+requirements, the display version needs the Arduino Mega.)
 
 The designs have idential controls, a pair of 3-axis joysticks, a pair of
 buttons that determine the mode of the joysticks, and a Run/Pause button.
