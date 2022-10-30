@@ -18,6 +18,7 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 
 #include <Servo.h>
 #include <BasicLinearAlgebra.h>
+#include <LiquidCrystal.h>
 
 #define ARM_LENGTH	 2.0
 #define LEG_LENGTH	 9.0
@@ -106,6 +107,12 @@ Base myBase;
 
 double h0;
 
+double jitterDX = 0.002;
+double jitterDY = 0.002;
+double jitterDZ = 0.002;
+double jitterAR = 5.0;
+double jitterAP = 5.0;
+double jitterAY = 5.0;
  
 // x-axis
 static BLA::Matrix<4,4> rotatePitch(double r)
@@ -240,30 +247,94 @@ static void update_alpha()
   }
 }
 
+#define RS_BUTTON 44
+#define POS_BUTTON 45
 
-void 
-setup() {
+//                rs   e  d4  d5  d6  d7
+LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
+
+#define BUFLEN 10
+
+static char *
+cvtFlt(char *buf, double val)
+{
+  char lclbuf[BUFLEN];
+  long int ivl = lrint(1000.0 * val);
+  int src_len = sprintf(lclbuf, "%d", ivl);
+  int src, dst;
+  for (src = 0, dst = 0; dst < BUFLEN && lclbuf[src]; ) {
+    buf[dst++] = lclbuf[src++];
+    if (src == src_len - 1) 
+      buf[dst++] = '.';
+  }
+  buf[dst] = 0;
+  return buf;
+}
+
+static void updateDisplay()
+{
+  char buf[BUFLEN];
+  char strBuf[50];
+
+  char *ra = strdup(cvtFlt (buf, myPlatform.dx));
+  char *rb = strdup(cvtFlt (buf, myPlatform.dy - h0));
+  char *rc = strdup(cvtFlt (buf, myPlatform.dz));
+  sprintf(strBuf, "xyz:%4s %4s %4s", ra, rb, rc);
+  lcd.setCursor(0, 0);
+  lcd.print((char *)strBuf);
+  free(ra);
+  free(rb);
+  free(rc);
+
+  sprintf(strBuf, "rpy: % 4d %  4d % 4d", 
+    (int)(R2D(myPlatform.roll)),
+    (int)(R2D(myPlatform.pitch)),
+    (int)(R2D(myPlatform.yaw))
+    );
+  lcd.setCursor(0, 1);
+  lcd.print((char *)strBuf);
+
+
+  ra = strdup(cvtFlt (buf, 10.0 * jitterDX));
+  rb = strdup(cvtFlt (buf, 10.0 * jitterDY));
+  rc = strdup(cvtFlt (buf, 10.0 * jitterDZ));
+  sprintf(strBuf, "xyz:%4s %4s %4s", ra, rb, rc);
+  lcd.setCursor(4, 2);
+  lcd.print((char *)strBuf);
+  free(ra);
+  free(rb);
+  free(rc);
+
+  sprintf(strBuf, "rpy: % 4d % 4d % 4d", 
+    (int)(jitterAR),
+    (int)(jitterAP),
+    (int)(jitterAY)
+    );
+  lcd.setCursor(4, 3);
+  lcd.print((char *)strBuf);
+
+}
+
+void setup() {
   Serial.begin(115200); // Any baud rate should work
   //Serial.println("Start stewart");
+
+  lcd.begin(16,4);
   
-  myServo[0].attach( 11);
-  myServo[1].attach( 10);
-  myServo[2].attach( 9);
-  myServo[3].attach( 6);
-  myServo[4].attach( 5);
-  myServo[5].attach( 3);
+  myServo[0].attach( 12);
+  myServo[1].attach( 11);
+  myServo[2].attach( 10);
+  myServo[3].attach( 9);
+  myServo[4].attach( 8);
+  myServo[5].attach( 7);
   pinMode(A0, INPUT);         // x
   pinMode(A1, INPUT);         // y
   //pinMode(A2, INPUT);       // z 
   pinMode(A3, INPUT);         // roll
   pinMode(A4, INPUT);         // pitch
   //pinMode(A5, INPUT);       // yaw
-  #define RS_BUTTON   7
-  #define TIME_BUTTON 4
-  #define POS_BUTTON  2
-  pinMode(RS_BUTTON, INPUT_PULLUP);   // r0n/stop
+  pinMode(RS_BUTTON, INPUT_PULLUP);   // run/stop
   pinMode(POS_BUTTON, INPUT_PULLUP);   // position/rotation
-  pinMode(TIME_BUTTON, INPUT_PULLUP);   // times
 
   h0 = 0.0;					// Eq 10
   for (int i = 0; i < 6; i++) {
@@ -279,14 +350,15 @@ setup() {
   }
   h0 /= 6.0;
   update_alpha ();
+  updateDisplay();
   pincr = ((double)random(1000))/10000.0;
 }
 
-void 
-loop() {
+
+void loop() {
   static bool runState = true;
 #if 0
-  byte posrot = digitalRead(POS_BUTTON);
+  byte posrot = digitalRead(4);
   Serial.println(posrot);
   int movx = map(analogRead(A0), 0, 1023, -1000, 1000);
   int movy = map(analogRead(A1), 0, 1023, -1000, 1000);
@@ -295,8 +367,6 @@ loop() {
   int movp = map(analogRead(A4), 0, 1023, -1000, 1000);
   //int movy = map(analogRead(A5), 0, 1023, -1000, 1000);
 #endif
-
-// fixme handle timesIME_BUTTON
 
   {     // debounce
 #define BOUNCE_COUNT 10
@@ -319,6 +389,7 @@ loop() {
     myServo[i].write( alpha[i]);
   }
   
+    
   if (runState) {
     myPlatform.yaw += pincr;
     if (myPlatform.yaw > 10.0) {
@@ -333,5 +404,3 @@ loop() {
   }
  delay( 2);
 }
-
-
