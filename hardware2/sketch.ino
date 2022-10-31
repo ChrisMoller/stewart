@@ -107,10 +107,10 @@ Base myBase;
 
 double h0;
 
-double jitterDX = 0.002;
+double jitterDX = 0.002;  // cm = .2mm
 double jitterDY = 0.002;
 double jitterDZ = 0.002;
-double jitterAR = 5.0;
+double jitterAR = 5.0;    // degrees
 double jitterAP = 5.0;
 double jitterAY = 5.0;
  
@@ -249,92 +249,128 @@ static void update_alpha()
 
 #define RS_BUTTON 44
 #define POS_BUTTON 45
+#define TIME_BUTTON 46
+#define JS1_BUTTON 12 // upper, xyz
+#define JS2_BUTTON 13 // lower, rpy
+
+#define SERVO0_PIN 11
+#define SERVO1_PIN 10
+#define SERVO2_PIN 9
+#define SERVO3_PIN 8
+#define SERVO4_PIN 7
+#define SERVO5_PIN 6
 
 //                rs   e  d4  d5  d6  d7
 LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
 
-#define BUFLEN 10
 
-static char *
-cvtFlt(char *buf, double val)
+static void
+cvtFlt(bool do_scale, char *buf, double val)
 {
+#define BUFLEN 64
   char lclbuf[BUFLEN];
-  long int ivl = lrint(1000.0 * val);
+  long int ivl = lrint((do_scale ? 1000.0 : 1.0) * val);
   int src_len = sprintf(lclbuf, "%d", ivl);
-  int src, dst;
-  for (src = 0, dst = 0; dst < BUFLEN && lclbuf[src]; ) {
+  int src; 
+  int dst = 0;
+  if (src_len < 5) 
+    for (; dst < 5-src_len; dst++) buf[dst] = ' ';
+  for (src = 0; dst < BUFLEN && lclbuf[src]; ) {
     buf[dst++] = lclbuf[src++];
     if (src == src_len - 1) 
       buf[dst++] = '.';
   }
   buf[dst] = 0;
-  return buf;
 }
 
-static void updateDisplay()
+enum {
+  DISPLAY_NOTHING,
+  DISPLAY_POSITION,
+  DISPLAY_JITTER,
+  DISPLAY_TIME
+};
+ 
+ bool jitter_dirty = true;
+ bool position_dirty = true;
+
+static void updateDisplay(int which)
 {
-  char buf[BUFLEN];
-  char strBuf[50];
+#define LBUFLEN 64
+  char buf[LBUFLEN];
+  memset(buf, 0, LBUFLEN);
 
-  char *ra = strdup(cvtFlt (buf, myPlatform.dx));
-  char *rb = strdup(cvtFlt (buf, myPlatform.dy - h0));
-  char *rc = strdup(cvtFlt (buf, myPlatform.dz));
-  sprintf(strBuf, "xyz:%4s %4s %4s", ra, rb, rc);
-  lcd.setCursor(0, 0);
-  lcd.print((char *)strBuf);
-  free(ra);
-  free(rb);
-  free(rc);
+  switch(which) {
+  case DISPLAY_NOTHING:
+    lcd.clear();
+    break;
+  case DISPLAY_POSITION:
+    if (position_dirty) {
+      cvtFlt (true, buf,    myPlatform.dx);
+      cvtFlt (true, buf+5,  myPlatform.dy + h0);
+      cvtFlt (true, buf+10, myPlatform.dz);
+      lcd.setCursor(0, 0);
+      lcd.print(buf);
 
-  sprintf(strBuf, "rpy: % 4d %  4d % 4d", 
-    (int)(R2D(myPlatform.roll)),
-    (int)(R2D(myPlatform.pitch)),
-    (int)(R2D(myPlatform.yaw))
-    );
-  lcd.setCursor(0, 1);
-  lcd.print((char *)strBuf);
+      cvtFlt (true, buf,    myPlatform.roll);
+      cvtFlt (true, buf+5,  myPlatform.pitch);
+      cvtFlt (true, buf+10, myPlatform.yaw);
+      lcd.setCursor(0, 1);
+      lcd.print(buf);
+      position_dirty = false;
+    }
+    break;
 
+  case DISPLAY_JITTER:
+    if (jitter_dirty) {
+      cvtFlt (true, buf,    10.0 * jitterDX);
+      cvtFlt (true, buf+5,  10.0 * jitterDY);
+      cvtFlt (true, buf+10, 10.0 * jitterDZ);
+      lcd.setCursor(0, 0);
+      lcd.print(buf);
 
-  ra = strdup(cvtFlt (buf, 10.0 * jitterDX));
-  rb = strdup(cvtFlt (buf, 10.0 * jitterDY));
-  rc = strdup(cvtFlt (buf, 10.0 * jitterDZ));
-  sprintf(strBuf, "xyz:%4s %4s %4s", ra, rb, rc);
-  lcd.setCursor(4, 2);
-  lcd.print((char *)strBuf);
-  free(ra);
-  free(rb);
-  free(rc);
+      cvtFlt (true, buf,    jitterAR);
+      cvtFlt (true, buf+5,  jitterAP);
+      cvtFlt (true, buf+10, jitterAY);
+      lcd.setCursor(0, 1);
+      lcd.print(buf);
+      jitter_dirty = false;
+    }
+    break;
 
-  sprintf(strBuf, "rpy: % 4d % 4d % 4d", 
-    (int)(jitterAR),
-    (int)(jitterAP),
-    (int)(jitterAY)
-    );
-  lcd.setCursor(4, 3);
-  lcd.print((char *)strBuf);
-
+  case DISPLAY_TIME:
+    lcd.setCursor(0, 0);
+    lcd.print("not yet implemented");
+    lcd.setCursor(0, 1);
+    lcd.print("                   ");
+    break;
+  }
 }
+
 
 void setup() {
   Serial.begin(115200); // Any baud rate should work
   //Serial.println("Start stewart");
 
-  lcd.begin(16,4);
+  lcd.begin(16,2);
+  //lcd.setRowOffsets(0, 64, 16, 68);
   
-  myServo[0].attach( 12);
-  myServo[1].attach( 11);
-  myServo[2].attach( 10);
-  myServo[3].attach( 9);
-  myServo[4].attach( 8);
-  myServo[5].attach( 7);
+  myServo[0].attach( SERVO0_PIN);
+  myServo[1].attach( SERVO1_PIN);
+  myServo[2].attach( SERVO2_PIN);
+  myServo[3].attach( SERVO3_PIN);
+  myServo[4].attach( SERVO4_PIN);
+  myServo[5].attach( SERVO5_PIN);
   pinMode(A0, INPUT);         // x
   pinMode(A1, INPUT);         // y
   //pinMode(A2, INPUT);       // z 
   pinMode(A3, INPUT);         // roll
   pinMode(A4, INPUT);         // pitch
   //pinMode(A5, INPUT);       // yaw
-  pinMode(RS_BUTTON, INPUT_PULLUP);   // run/stop
-  pinMode(POS_BUTTON, INPUT_PULLUP);   // position/rotation
+  pinMode(RS_BUTTON, INPUT_PULLUP);  // run/stop
+  pinMode(POS_BUTTON, INPUT_PULLUP); // position/rotation
+  pinMode(TIME_BUTTON, INPUT_PULLUP); // time
+  pinMode(JS1_BUTTON, INPUT_PULLUP); // js1 sel
+  pinMode(JS2_BUTTON, INPUT_PULLUP); // js2 sel
 
   h0 = 0.0;					// Eq 10
   for (int i = 0; i < 6; i++) {
@@ -350,23 +386,64 @@ void setup() {
   }
   h0 /= 6.0;
   update_alpha ();
-  updateDisplay();
+  updateDisplay(DISPLAY_JITTER);
   pincr = ((double)random(1000))/10000.0;
 }
 
 
 void loop() {
   static bool runState = true;
-#if 0
-  byte posrot = digitalRead(4);
-  Serial.println(posrot);
-  int movx = map(analogRead(A0), 0, 1023, -1000, 1000);
-  int movy = map(analogRead(A1), 0, 1023, -1000, 1000);
-  //int movz = map(analogRead(A2), 0, 1023, -1000, 1000);
-  int movr = map(analogRead(A3), 0, 1023, -1000, 1000);
-  int movp = map(analogRead(A4), 0, 1023, -1000, 1000);
-  //int movy = map(analogRead(A5), 0, 1023, -1000, 1000);
-#endif
+  // positive down, negative up
+  // js 1, upper, xyz
+  // js 2, lower, rpy
+  int movdx = map(analogRead(A0), 0, 1023, -1000, 1000);
+  int movdy = map(analogRead(A1), 0, 1023, -1000, 1000);
+  //int movdz = map(analogRead(A2), 0, 1023, -1000, 1000);
+  int movar = map(analogRead(A3), 0, 1023, -1000, 1000);
+  int movap = map(analogRead(A4), 0, 1023, -1000, 1000);
+  //int movay = map(analogRead(A5), 0, 1023, -1000, 1000);
+
+  int which_display = DISPLAY_NOTHING;
+  byte posjit  = digitalRead(POS_BUTTON);
+  byte settime = digitalRead(TIME_BUTTON);
+  byte xyzsel  = digitalRead(JS1_BUTTON);
+  byte rpysel  = digitalRead(JS2_BUTTON);
+  static bool non_jitter = false;
+  if (posjit == HIGH) { // jitter or time
+    if (settime == HIGH) { // jitter
+       if (non_jitter) {
+        non_jitter = false;
+        jitter_dirty = true;
+       }
+      if (xyzsel == HIGH) {
+        if (movdx > 0)      {jitterDX -= 0.1; jitter_dirty = true;}
+        else if (movdx < 0) {jitterDX += 0.1; jitter_dirty = true;}
+        if (movdy > 0)      {jitterDY -= 0.1; jitter_dirty = true;}
+        else if (movdy < 0) {jitterDY += 0.1; jitter_dirty = true;}
+        //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
+        //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
+      }
+      else {
+        jitterDX = 0.0;
+        jitterDY = 0.0;
+        jitterDZ = 0.0;
+        jitter_dirty = true;
+      }
+      which_display = DISPLAY_JITTER;
+    }
+    else {                 // time
+      updateDisplay(DISPLAY_TIME);
+      non_jitter = true;
+    }
+  }
+  else {              // position
+    which_display = DISPLAY_POSITION;
+    position_dirty = true;
+    non_jitter = true;
+  }
+  if (jitter_dirty |
+      position_dirty) updateDisplay(which_display);
+
 
   {     // debounce
 #define BOUNCE_COUNT 10

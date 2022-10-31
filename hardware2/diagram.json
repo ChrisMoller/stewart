@@ -56,10 +56,10 @@
     {
       "type": "wokwi-pushbutton",
       "id": "btn1",
-      "top": 349.53,
-      "left": 199.98,
+      "top": 350.72,
+      "left": 238.55,
       "rotate": 270,
-      "attrs": { "color": "red", "label": "Run/Stop", "bounce": "0" }
+      "attrs": { "color": "yellow", "label": "Run/Stop", "bounce": "0" }
     },
     {
       "type": "wokwi-analog-joystick",
@@ -80,34 +80,48 @@
     {
       "type": "wokwi-pushbutton",
       "id": "btn2",
-      "top": 347.69,
-      "left": 88.91,
+      "top": 348.29,
+      "left": 58.05,
       "rotate": 90,
-      "attrs": { "color": "green", "label": "Pos/Jitter", "bounce": "0" }
+      "attrs": { "color": "green", "label": "Position", "bounce": "0" }
     },
-    { "type": "wokwi-lcd2004", "id": "lcd1", "top": 425.19, "left": 9.63, "attrs": {} }
+    { "type": "wokwi-lcd1602", "id": "lcd1", "top": 425.19, "left": 9.63, "attrs": {} },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn3",
+      "top": 349.25,
+      "left": 137.95,
+      "rotate": 270,
+      "attrs": { "color": "green", "label": "Time", "bounce": "0" }
+    }
   ],
   "connections": [
-    [ "servo1:PWM", "mega:12", "green", [ "h-56.56", "v226.86" ] ],
-    [ "servo2:PWM", "mega:11", "green", [ "h-27.33", "v80.88" ] ],
-    [ "servo3:PWM", "mega:10", "green", [ "h-28.96", "v-56.19" ] ],
-    [ "servo4:PWM", "mega:9", "green", [ "h-45.5", "v-187.4" ] ],
-    [ "servo5:PWM", "mega:8", "green", [ "h-60.11", "v-335.21" ] ],
-    [ "servo6:PWM", "mega:7", "green", [ "h-72.87", "v-455.36" ] ],
+    [ "servo1:PWM", "mega:11", "green", [ "h-56.56", "v226.86" ] ],
+    [ "servo2:PWM", "mega:10", "green", [ "h-27.33", "v80.88" ] ],
+    [ "servo3:PWM", "mega:9", "green", [ "h-28.96", "v-56.19" ] ],
+    [ "servo4:PWM", "mega:8", "green", [ "h-45.5", "v-187.4" ] ],
+    [ "servo5:PWM", "mega:7", "green", [ "h-60.11", "v-335.21" ] ],
+    [ "servo6:PWM", "mega:6", "green", [ "h-72.87", "v-455.36" ] ],
     [ "joystick1:HORZ", "mega:A0", "green", [ "h49.78", "v2.07" ] ],
     [ "joystick1:VERT", "mega:A1", "green", [ "h45.42", "v2.07" ] ],
     [ "joystick2:HORZ", "mega:A3", "green", [ "h45.94", "v-73.55" ] ],
     [ "joystick2:VERT", "mega:A4", "green", [ "h54.23", "v-2.42" ] ],
     [ "mega:GND.5", "btn2:2.l", "black", [ "h-1.4", "v46.49", "h25.67" ] ],
     [ "mega:45", "btn2:1.l", "green", [ "h0.35", "v69.38" ] ],
-    [ "mega:GND.5", "lcd1:RW", "black", [ "h-0.93", "v46.24", "h-118.65", "v253.58", "h77.96" ] ],
+    [ "mega:GND.5", "lcd1:RW", "black", [ "h-0.93", "v46.51", "h-161.51", "v286.04", "h88.6" ] ],
     [ "lcd1:D7", "mega:19", "green", [ "v13.29", "h207.78", "v-3.75" ] ],
     [ "lcd1:D6", "mega:18", "green", [ "v22.44", "h226.6", "v-11.08" ] ],
     [ "lcd1:D5", "mega:17", "green", [ "v27.36", "h247.79", "v3.08" ] ],
     [ "lcd1:D4", "mega:16", "green", [ "v34.75", "h263.45", "v-402.39" ] ],
     [ "lcd1:E", "mega:15", "green", [ "v40.9", "h318.21", "v-416.54" ] ],
     [ "lcd1:RS", "mega:14", "green", [ "v47.05", "h342.64", "v-432.54" ] ],
-    [ "btn2:2.l", "btn1:1.r", "black", [ "v-22.89", "h5.55" ] ],
-    [ "mega:44", "btn1:2.r", "green", [ "v-11.97", "h32.59" ] ]
+    [ "btn2:2.l", "btn1:1.r", "black", [ "v-10.71", "h96.07" ] ],
+    [ "mega:44", "btn1:2.r", "green", [ "v-11.97", "h32.59" ] ],
+    [ "btn1:1.r", "btn3:1.r", "black", [ "v-11.92", "h78.57" ] ],
+    [ "mega:46", "btn3:2.r", "green", [ "v-14.46", "h-18.89", "v64.38", "h-0.14" ] ],
+    [ "joystick2:SEL", "mega:13", "green", [ "h41.23", "v-291.14", "h290.65", "v130.73" ] ],
+    [ "joystick1:SEL", "mega:12", "green", [ "h32.88", "v-168.6", "h304.02", "v149.58" ] ],
+    [ "mega:3.3V", "joystick1:GND", "black", [ "h-77.97", "v-12.94" ] ],
+    [ "joystick1:GND", "joystick2:GND", "black", [ "h11.15", "v130.69" ] ]
   ]
 }
