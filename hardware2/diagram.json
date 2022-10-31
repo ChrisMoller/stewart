@@ -59,7 +59,8 @@
       "top": 350.72,
       "left": 238.55,
       "rotate": 270,
-      "attrs": { "color": "yellow", "label": "Run/Stop", "bounce": "0" }
+      "attrs": { "color": "yellow", 
+      "label": "Run/Stop" }
     },
     {
       "type": "wokwi-analog-joystick",
@@ -83,16 +84,19 @@
       "top": 348.29,
       "left": 58.05,
       "rotate": 90,
-      "attrs": { "color": "green", "label": "Position", "bounce": "0" }
+      "attrs": { "color": "green", 
+      "label": "Position" }
     },
-    { "type": "wokwi-lcd1602", "id": "lcd1", "top": 425.19, "left": 9.63, "attrs": {} },
+    { "type": "wokwi-lcd1602", "id": "lcd1",
+     "top": 425.19, "left": 9.63, "attrs": {} },
     {
       "type": "wokwi-pushbutton",
       "id": "btn3",
       "top": 349.25,
       "left": 137.95,
       "rotate": 270,
-      "attrs": { "color": "green", "label": "Time", "bounce": "0" }
+      "attrs": { "color": "green", 
+      "label": "Time" }
     }
   ],
   "connections": [

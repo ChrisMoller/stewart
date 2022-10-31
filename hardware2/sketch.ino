@@ -19,6 +19,7 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 #include <Servo.h>
 #include <BasicLinearAlgebra.h>
 #include <LiquidCrystal.h>
+#include <ezButton.h>
 
 #define ARM_LENGTH	 2.0
 #define LEG_LENGTH	 9.0
@@ -262,6 +263,9 @@ static void update_alpha()
 
 //                rs   e  d4  d5  d6  d7
 LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
+ezButton rs_button(RS_BUTTON);
+ezButton pos_button(POS_BUTTON);
+ezButton time_button(TIME_BUTTON);
 
 
 static void
@@ -352,7 +356,9 @@ void setup() {
   //Serial.println("Start stewart");
 
   lcd.begin(16,2);
-  //lcd.setRowOffsets(0, 64, 16, 68);
+  rs_button.setDebounceTime(50);
+  pos_button.setDebounceTime(50);
+  time_button.setDebounceTime(50);
   
   myServo[0].attach( SERVO0_PIN);
   myServo[1].attach( SERVO1_PIN);
@@ -366,9 +372,11 @@ void setup() {
   pinMode(A3, INPUT);         // roll
   pinMode(A4, INPUT);         // pitch
   //pinMode(A5, INPUT);       // yaw
+  #if 0
   pinMode(RS_BUTTON, INPUT_PULLUP);  // run/stop
   pinMode(POS_BUTTON, INPUT_PULLUP); // position/rotation
   pinMode(TIME_BUTTON, INPUT_PULLUP); // time
+  #endif
   pinMode(JS1_BUTTON, INPUT_PULLUP); // js1 sel
   pinMode(JS2_BUTTON, INPUT_PULLUP); // js2 sel
 
@@ -392,80 +400,107 @@ void setup() {
 
 
 void loop() {
-  static bool runState = true;
-  // positive down, negative up
-  // js 1, upper, xyz
-  // js 2, lower, rpy
-  int movdx = map(analogRead(A0), 0, 1023, -1000, 1000);
-  int movdy = map(analogRead(A1), 0, 1023, -1000, 1000);
-  //int movdz = map(analogRead(A2), 0, 1023, -1000, 1000);
-  int movar = map(analogRead(A3), 0, 1023, -1000, 1000);
-  int movap = map(analogRead(A4), 0, 1023, -1000, 1000);
-  //int movay = map(analogRead(A5), 0, 1023, -1000, 1000);
+  rs_button.loop();
+  pos_button.loop();
+  time_button.loop();
 
-  int which_display = DISPLAY_NOTHING;
-  byte posjit  = digitalRead(POS_BUTTON);
-  byte settime = digitalRead(TIME_BUTTON);
-  byte xyzsel  = digitalRead(JS1_BUTTON);
-  byte rpysel  = digitalRead(JS2_BUTTON);
-  static bool non_jitter = false;
-  if (posjit == HIGH) { // jitter or time
-    if (settime == HIGH) { // jitter
-       if (non_jitter) {
-        non_jitter = false;
-        jitter_dirty = true;
-       }
+  static bool runState = true;
+
+  {
+    // positive down, negative up
+    // js 1, upper, xyz
+    // js 2, lower, rpy
+    int movdx = map(analogRead(A0), 0, 1023, -1000, 1000);
+    int movdy = map(analogRead(A1), 0, 1023, -1000, 1000);
+    //int movdz = map(analogRead(A2), 0, 1023, -1000, 1000);
+    int movar = map(analogRead(A3), 0, 1023, -1000, 1000);
+    int movap = map(analogRead(A4), 0, 1023, -1000, 1000);
+    //int movay = map(analogRead(A5), 0, 1023, -1000, 1000);
+
+
+    int which_display = DISPLAY_NOTHING;
+    int posBtnState = pos_button.getState();
+    int timeBtnState = time_button.getState();
+    byte xyzsel  = digitalRead(JS1_BUTTON);
+    byte rpysel  = digitalRead(JS2_BUTTON);
+    static bool non_jitter = false;
+    if (posBtnState == HIGH) { // jitter or time
+      if (timeBtnState == HIGH) { // jitter
+         if (non_jitter) {
+          non_jitter = false;
+          jitter_dirty = true;
+         }
+         if (xyzsel == HIGH) {
+          if (movdx > 0)      {jitterDX -= 0.001; jitter_dirty = true;}
+          else if (movdx < 0) {jitterDX += 0.001; jitter_dirty = true;}
+          if (movdy > 0)      {jitterDY -= 0.001; jitter_dirty = true;}
+          else if (movdy < 0) {jitterDY += 0.001; jitter_dirty = true;}
+          //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
+          //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
+          if (movar > 0)      {jitterAR -= 0.01; jitter_dirty = true;}
+          else if (movar < 0) {jitterAR += 0.01; jitter_dirty = true;}
+          if (movap > 0)      {jitterAP -= 0.01; jitter_dirty = true;}
+          else if (movap < 0) {jitterAP += 0.01; jitter_dirty = true;}
+          //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
+          //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
+        }
+        else {
+          jitterDX = 0.0;
+          jitterDY = 0.0;
+          jitterDZ = 0.0;
+          jitterAR = 0.0;
+          jitterAP = 0.0;
+          jitterAY = 0.0;
+          jitter_dirty = true;
+        }
+        which_display = DISPLAY_JITTER;
+      }
+      else {                 // time
+        updateDisplay(DISPLAY_TIME);
+        non_jitter = true;
+      }
+    }
+    else {              // position // jitter
       if (xyzsel == HIGH) {
-        if (movdx > 0)      {jitterDX -= 0.1; jitter_dirty = true;}
-        else if (movdx < 0) {jitterDX += 0.1; jitter_dirty = true;}
-        if (movdy > 0)      {jitterDY -= 0.1; jitter_dirty = true;}
-        else if (movdy < 0) {jitterDY += 0.1; jitter_dirty = true;}
-        //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
-        //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
+       if (movdx > 0)      {myPlatform.dx -= 0.001; position_dirty = true;}
+       else if (movdx < 0) {myPlatform.dx += 0.001; position_dirty = true;}
+       if (movdy > 0)      {myPlatform.dy -= 0.001; position_dirty = true;}
+       else if (movdy < 0) {myPlatform.dy += 0.001; position_dirty = true;}
+       //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
+       //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
+       if (movar > 0)      {myPlatform.roll -= 0.001; position_dirty = true;}
+       else if (movar < 0) {myPlatform.roll += 0.001; position_dirty = true;}
+       if (movap > 0)      {myPlatform.pitch -= 0.001; position_dirty = true;}
+       else if (movap < 0) {myPlatform.pitch += 0.001; position_dirty = true;}
+       //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
+       //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
       }
       else {
-        jitterDX = 0.0;
-        jitterDY = 0.0;
-        jitterDZ = 0.0;
-        jitter_dirty = true;
+        myPlatform.dx = 0.0;
+        myPlatform.dy = 0.0;
+        myPlatform.dz = 0.0;
+        myPlatform.roll = 0.0;
+        myPlatform.pitch = 0.0;
+        myPlatform.yaw = 0.0;
+        position_dirty = true;
       }
-      which_display = DISPLAY_JITTER;
-    }
-    else {                 // time
-      updateDisplay(DISPLAY_TIME);
+      which_display = DISPLAY_POSITION;
+      position_dirty = true;
       non_jitter = true;
     }
+    if (jitter_dirty |
+        position_dirty) {
+        update_alpha();
+          updateDisplay(which_display);
+        }
   }
-  else {              // position
-    which_display = DISPLAY_POSITION;
-    position_dirty = true;
-    non_jitter = true;
-  }
-  if (jitter_dirty |
-      position_dirty) updateDisplay(which_display);
 
-
-  {     // debounce
-#define BOUNCE_COUNT 10
-    static byte preveState = HIGH;
-    static int count = 0;
-    static byte oldBtn = HIGH;
-    byte btn = digitalRead(RS_BUTTON);
-    if (btn == oldBtn) count++;
-    else oldBtn = btn;
-    if (count >= BOUNCE_COUNT) {
-      count = 0;
-      if (btn == LOW && preveState == HIGH) {
-        runState = !runState;
-      }
-      preveState = btn;
-    }
-  }
+  if (rs_button.isPressed())
+    runState = !runState;
 
   for(int i=0; i< NUM_SERVOS; i++) {
     myServo[i].write( alpha[i]);
   }
-  
     
   if (runState) {
     myPlatform.yaw += pincr;
