@@ -59,24 +59,7 @@
       "top": 350.72,
       "left": 238.55,
       "rotate": 270,
-      "attrs": { "color": "yellow", 
-      "label": "Run/Stop" }
-    },
-    {
-      "type": "wokwi-analog-joystick",
-      "id": "joystick1",
-      "top": 17.38,
-      "left": -88.95,
-      "rotate": 270,
-      "attrs": { "bounce": "0" }
-    },
-    {
-      "type": "wokwi-analog-joystick",
-      "id": "joystick2",
-      "top": 148.43,
-      "left": -91.22,
-      "rotate": 270,
-      "attrs": { "bounce": "0" }
+      "attrs": { "color": "yellow", "label": "Run/Stop" }
     },
     {
       "type": "wokwi-pushbutton",
@@ -84,19 +67,109 @@
       "top": 348.29,
       "left": 58.05,
       "rotate": 90,
-      "attrs": { "color": "green", 
-      "label": "Position" }
+      "attrs": { "color": "green", "label": "Position" }
     },
-    { "type": "wokwi-lcd1602", "id": "lcd1",
-     "top": 425.19, "left": 9.63, "attrs": {} },
+    { "type": "wokwi-lcd1602", "id": "lcd1", "top": 441.59, "left": 8.07, "attrs": {} },
     {
       "type": "wokwi-pushbutton",
       "id": "btn3",
       "top": 349.25,
       "left": 137.95,
       "rotate": 270,
-      "attrs": { "color": "green", 
-      "label": "Time" }
+      "attrs": { "color": "green", "label": "Time" }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "pot1",
+      "top": -144.76,
+      "left": -313.81,
+      "rotate": 270,
+      "attrs": { "travelLength": "30", "value": "512" }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "pot2",
+      "top": 133.77,
+      "left": -314.49,
+      "rotate": 270,
+      "attrs": { "travelLength": "30", "value": "512" }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "pot3",
+      "top": -143.28,
+      "left": -212.96,
+      "rotate": 270,
+      "attrs": { "travelLength": "30", "value": "512" }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "pot4",
+      "top": -144.1,
+      "left": -118.89,
+      "rotate": 270,
+      "attrs": { "travelLength": "30", "value": "512" }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "pot5",
+      "top": 132.8,
+      "left": -212.84,
+      "rotate": 270,
+      "attrs": { "travelLength": "30", "value": "512" }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "pot6",
+      "top": 131.16,
+      "left": -116.79,
+      "rotate": 270,
+      "attrs": { "travelLength": "30", "value": "512" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 360.57,
+      "left": -253.04,
+      "attrs": { "color": "red", "label": "jitter mm/deg" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": 364.63,
+      "left": -166.97,
+      "attrs": { "color": "red", "label": "position mm/deg" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led3",
+      "top": 367.15,
+      "left": -91.83,
+      "attrs": { "color": "red", "label": "time sec" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 481.55,
+      "left": -268.82,
+      "rotate": 90,
+      "attrs": { "value": "220r" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 486.58,
+      "left": -181.92,
+      "rotate": 90,
+      "attrs": { "value": "220r" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r3",
+      "top": 482.96,
+      "left": -106.68,
+      "rotate": 90,
+      "attrs": { "value": "220r" }
     }
   ],
   "connections": [
@@ -106,10 +179,6 @@
     [ "servo4:PWM", "mega:8", "green", [ "h-45.5", "v-187.4" ] ],
     [ "servo5:PWM", "mega:7", "green", [ "h-60.11", "v-335.21" ] ],
     [ "servo6:PWM", "mega:6", "green", [ "h-72.87", "v-455.36" ] ],
-    [ "joystick1:HORZ", "mega:A0", "green", [ "h49.78", "v2.07" ] ],
-    [ "joystick1:VERT", "mega:A1", "green", [ "h45.42", "v2.07" ] ],
-    [ "joystick2:HORZ", "mega:A3", "green", [ "h45.94", "v-73.55" ] ],
-    [ "joystick2:VERT", "mega:A4", "green", [ "h54.23", "v-2.42" ] ],
     [ "mega:GND.5", "btn2:2.l", "black", [ "h-1.4", "v46.49", "h25.67" ] ],
     [ "mega:45", "btn2:1.l", "green", [ "h0.35", "v69.38" ] ],
     [ "mega:GND.5", "lcd1:RW", "black", [ "h-0.93", "v46.51", "h-161.51", "v286.04", "h88.6" ] ],
@@ -123,9 +192,31 @@
     [ "mega:44", "btn1:2.r", "green", [ "v-11.97", "h32.59" ] ],
     [ "btn1:1.r", "btn3:1.r", "black", [ "v-11.92", "h78.57" ] ],
     [ "mega:46", "btn3:2.r", "green", [ "v-14.46", "h-18.89", "v64.38", "h-0.14" ] ],
-    [ "joystick2:SEL", "mega:13", "green", [ "h41.23", "v-291.14", "h290.65", "v130.73" ] ],
-    [ "joystick1:SEL", "mega:12", "green", [ "h32.88", "v-168.6", "h304.02", "v149.58" ] ],
-    [ "mega:3.3V", "joystick1:GND", "black", [ "h-77.97", "v-12.94" ] ],
-    [ "joystick1:GND", "joystick2:GND", "black", [ "h11.15", "v130.69" ] ]
+    [ "pot1:GND", "pot2:GND", "black", [ "v-14.55", "h-50.27", "v276.75", "h46.31" ] ],
+    [ "pot3:GND", "pot1:GND", "black", [ "v-16.42", "h-105.37" ] ],
+    [ "pot3:GND", "pot4:GND", "black", [ "v-17.38", "h94.07" ] ],
+    [ "pot2:GND", "pot5:GND", "black", [ "v-16.36", "h105.49" ] ],
+    [ "pot5:GND", "pot6:GND", "black", [ "v-15.39", "h97.35" ] ],
+    [ "mega:5V", "pot4:VCC", "red", [ "h-96.14", "v-22.69", "h-74.47" ] ],
+    [ "pot4:VCC", "pot3:VCC", "red", [ "v40.55", "h-91.98", "v-4.68" ] ],
+    [ "pot3:VCC", "pot1:VCC", "red", [ "v39.73", "h-104.51", "v-0.94" ] ],
+    [ "mega:5V", "pot6:VCC", "red", [ "h-98.01", "v244.76", "h-71.07", "v-4.68" ] ],
+    [ "pot6:VCC", "pot5:VCC", "red", [ "v33.67", "h-92.21" ] ],
+    [ "pot5:VCC", "pot2:VCC", "red", [ "v31.09", "h-100.89" ] ],
+    [ "pot4:SIG", "mega:A2", "green", [ "v28.39", "h59.39", "v94.45" ] ],
+    [ "pot3:SIG", "mega:A1", "green", [ "v19.15", "h163.75", "v93.51" ] ],
+    [ "pot1:SIG", "mega:A0", "green", [ "v13.86", "h277.53", "v92.58" ] ],
+    [ "pot6:SIG", "mega:A5", "green", [ "v25.25", "h89.08", "v-144.59" ] ],
+    [ "pot5:SIG", "mega:A4", "green", [ "v17.07", "h176.72", "v-148.68" ] ],
+    [ "pot2:SIG", "mega:A3", "green", [ "v8.61", "h269.02", "v-150.55" ] ],
+    [ "led1:C", "r1:1", "green", [ "v0" ] ],
+    [ "led2:C", "r2:1", "green", [ "v0" ] ],
+    [ "led3:C", "r3:1", "green", [ "v0" ] ],
+    [ "r3:2", "btn2:2.l", "black", [ "h-0.11", "v14.56", "h65.56", "v-202.46", "h103.16" ] ],
+    [ "r3:2", "r2:2", "black", [ "h-4.94", "v19.39", "h-67.49", "v-22.17" ] ],
+    [ "r2:2", "r1:2", "black", [ "h2.82", "v15.77", "h-94.48" ] ],
+    [ "led3:A", "mega:3", "green", [ "v13.93", "h407.28", "v-301.19" ] ],
+    [ "led2:A", "mega:4", "green", [ "v23.25", "h489.9", "v-294.39" ] ],
+    [ "led1:A", "mega:5", "green", [ "v34.79", "h582.76", "v-312.75" ] ]
   ]
 }

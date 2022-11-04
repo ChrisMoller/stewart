@@ -21,6 +21,14 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 #include <LiquidCrystal.h>
 #include <ezButton.h>
 
+/***  Operational parameters ***/
+
+#define MAX_POSITIONAL_JITTER  20    // millimetres
+#define MAX_ROTATIONAL_JITTER 10   // degrees
+
+
+
+
 #define ARM_LENGTH	 2.0
 #define LEG_LENGTH	 9.0
 
@@ -114,6 +122,9 @@ double jitterDZ = 0.002;
 double jitterAR = 5.0;    // degrees
 double jitterAP = 5.0;
 double jitterAY = 5.0;
+double onset_time    = 0.2;
+double relax_time    = 1.0;
+double interval_time = 3.2;
  
 // x-axis
 static BLA::Matrix<4,4> rotatePitch(double r)
@@ -228,31 +239,21 @@ static void update_alpha()
     double alphaX = asin (arg) - atan2 (N, M);
     if (isnan (alphaX)) {
       is_valid = false;
-      //Serial.println(i);
-      //Serial.println(" boom");
       break;
     }
     else {
       alpha[i] = R2D((i&1) ? alphaX : alphaX);
-      //Serial.println(alpha[i]);
     }
-
-#if 0
-  if (!is_valid) {
-  Serial.println("boom");
-
-  //  for (int i = 0; i < servos.size (); i++)
-  //    servos[i]->alpha = alpha_stage[i];
-  }
-#endif
   }
 }
 
-#define RS_BUTTON 44
-#define POS_BUTTON 45
+#define RS_BUTTON   44
+#define POS_BUTTON  45
 #define TIME_BUTTON 46
-#define JS1_BUTTON 12 // upper, xyz
-#define JS2_BUTTON 13 // lower, rpy
+#if 1
+#define JS1_BUTTON  12 // upper, xyz
+#define JS2_BUTTON  13 // lower, rpy
+#endif
 
 #define SERVO0_PIN 11
 #define SERVO1_PIN 10
@@ -260,20 +261,52 @@ static void update_alpha()
 #define SERVO3_PIN 8
 #define SERVO4_PIN 7
 #define SERVO5_PIN 6
+#define JITTER_LED_PIN   5
+#define POSITION_LED_PIN 4
+#define TIME_LED_PIN     3
+#define LCD_RS_PIN 14
+#define LCD_E_PIN  15
+#define LCD_D4_PIN 16
+#define LCD_D5_PIN 17
+#define LCD_D6_PIN 18
+#define LCD_D7_PIN 19
 
-//                rs   e  d4  d5  d6  d7
-LiquidCrystal lcd(14, 15, 16, 17, 18, 19);
+LiquidCrystal lcd(LCD_RS_PIN,
+                  LCD_E_PIN,
+                  LCD_D4_PIN,
+                  LCD_D5_PIN,
+                  LCD_D6_PIN,
+                  LCD_D7_PIN);
 ezButton rs_button(RS_BUTTON);
 ezButton pos_button(POS_BUTTON);
 ezButton time_button(TIME_BUTTON);
 
+enum {
+  SCALE_NONE,
+  SCALE_CM_TO_MM,
+  SCALE_TENTHS
+};
 
 static void
-cvtFlt(bool do_scale, char *buf, double val)
+cvtFlt(int scale, char *buf, double val)
 {
 #define BUFLEN 64
   char lclbuf[BUFLEN];
-  long int ivl = lrint((do_scale ? 1000.0 : 1.0) * val);
+  long int ivl;
+  bool do_dec = false;
+  switch(scale)
+  {
+  case SCALE_NONE:
+    ivl = lrint(val);
+    break;
+  case SCALE_TENTHS:
+    ivl = lrint(val);
+    do_dec = true;
+    break;
+  case SCALE_CM_TO_MM:
+    ivl = lrint(10.0 * val);
+    break;
+  }
   int src_len = sprintf(lclbuf, "%d", ivl);
   int src; 
   int dst = 0;
@@ -281,8 +314,8 @@ cvtFlt(bool do_scale, char *buf, double val)
     for (; dst < 5-src_len; dst++) buf[dst] = ' ';
   for (src = 0; dst < BUFLEN && lclbuf[src]; ) {
     buf[dst++] = lclbuf[src++];
-    if (src == src_len - 1) 
-      buf[dst++] = '.';
+    if (do_dec && src == src_len - 1) 
+        buf[dst++] = '.';
   }
   buf[dst] = 0;
 }
@@ -296,6 +329,7 @@ enum {
  
  bool jitter_dirty = true;
  bool position_dirty = true;
+ bool time_dirty = true;
 
 static void updateDisplay(int which)
 {
@@ -309,15 +343,15 @@ static void updateDisplay(int which)
     break;
   case DISPLAY_POSITION:
     if (position_dirty) {
-      cvtFlt (true, buf,    myPlatform.dx);
-      cvtFlt (true, buf+5,  myPlatform.dy + h0);
-      cvtFlt (true, buf+10, myPlatform.dz);
+      cvtFlt (SCALE_NONE, buf,    myPlatform.dx);
+      cvtFlt (SCALE_NONE, buf+5,  myPlatform.dy + h0);
+      cvtFlt (SCALE_NONE, buf+10, myPlatform.dz);
       lcd.setCursor(0, 0);
       lcd.print(buf);
 
-      cvtFlt (true, buf,    myPlatform.roll);
-      cvtFlt (true, buf+5,  myPlatform.pitch);
-      cvtFlt (true, buf+10, myPlatform.yaw);
+      cvtFlt (SCALE_NONE, buf,    myPlatform.roll);
+      cvtFlt (SCALE_NONE, buf+5,  myPlatform.pitch);
+      cvtFlt (SCALE_NONE, buf+10, myPlatform.yaw);
       lcd.setCursor(0, 1);
       lcd.print(buf);
       position_dirty = false;
@@ -326,15 +360,15 @@ static void updateDisplay(int which)
 
   case DISPLAY_JITTER:
     if (jitter_dirty) {
-      cvtFlt (true, buf,    10.0 * jitterDX);
-      cvtFlt (true, buf+5,  10.0 * jitterDY);
-      cvtFlt (true, buf+10, 10.0 * jitterDZ);
+      cvtFlt (SCALE_NONE, buf,    10.0 * jitterDX);
+      cvtFlt (SCALE_NONE, buf+5,  10.0 * jitterDY);
+      cvtFlt (SCALE_NONE, buf+10, 10.0 * jitterDZ);
       lcd.setCursor(0, 0);
       lcd.print(buf);
 
-      cvtFlt (true, buf,    jitterAR);
-      cvtFlt (true, buf+5,  jitterAP);
-      cvtFlt (true, buf+10, jitterAY);
+      cvtFlt (SCALE_NONE, buf,    jitterAR);
+      cvtFlt (SCALE_NONE, buf+5,  jitterAP);
+      cvtFlt (SCALE_NONE, buf+10, jitterAY);
       lcd.setCursor(0, 1);
       lcd.print(buf);
       jitter_dirty = false;
@@ -342,10 +376,16 @@ static void updateDisplay(int which)
     break;
 
   case DISPLAY_TIME:
-    lcd.setCursor(0, 0);
-    lcd.print("not yet implemented");
-    lcd.setCursor(0, 1);
-    lcd.print("                   ");
+    if (time_dirty) {
+      cvtFlt (SCALE_TENTHS, buf,    10.0 * onset_time);
+      cvtFlt (SCALE_TENTHS, buf+5,  10.0 * relax_time);
+      cvtFlt (SCALE_TENTHS, buf+10, 10.0 * interval_time);
+      lcd.setCursor(0, 0);
+      lcd.print(buf);
+      lcd.setCursor(0, 1);
+      lcd.print("                   ");
+      time_dirty = false;
+    }
     break;
   }
 }
@@ -368,17 +408,26 @@ void setup() {
   myServo[5].attach( SERVO5_PIN);
   pinMode(A0, INPUT);         // x
   pinMode(A1, INPUT);         // y
-  //pinMode(A2, INPUT);       // z 
+  pinMode(A2, INPUT);         // z 
   pinMode(A3, INPUT);         // roll
   pinMode(A4, INPUT);         // pitch
-  //pinMode(A5, INPUT);       // yaw
-  #if 0
-  pinMode(RS_BUTTON, INPUT_PULLUP);  // run/stop
-  pinMode(POS_BUTTON, INPUT_PULLUP); // position/rotation
-  pinMode(TIME_BUTTON, INPUT_PULLUP); // time
-  #endif
+  pinMode(A5, INPUT);         // yaw
+  pinMode(JITTER_LED_PIN,    OUTPUT);  
+  pinMode(POSITION_LED_PIN,  OUTPUT);  
+  pinMode(TIME_LED_PIN,      OUTPUT);  
+  pinMode(LCD_E_PIN,         OUTPUT);      
+  pinMode(LCD_D4_PIN,        OUTPUT);      
+  pinMode(LCD_D5_PIN,        OUTPUT);      
+  pinMode(LCD_D6_PIN,        OUTPUT);      
+  pinMode(LCD_D7_PIN,        OUTPUT);   
+  #if 1
   pinMode(JS1_BUTTON, INPUT_PULLUP); // js1 sel
   pinMode(JS2_BUTTON, INPUT_PULLUP); // js2 sel
+  #endif
+  
+  digitalWrite(JITTER_LED_PIN,   HIGH);
+  digitalWrite(POSITION_LED_PIN, LOW);
+  digitalWrite(TIME_LED_PIN,     LOW);
 
   h0 = 0.0;					// Eq 10
   for (int i = 0; i < 6; i++) {
@@ -394,7 +443,6 @@ void setup() {
   }
   h0 /= 6.0;
   update_alpha ();
-  updateDisplay(DISPLAY_JITTER);
   pincr = ((double)random(1000))/10000.0;
 }
 
@@ -407,17 +455,6 @@ void loop() {
   static bool runState = true;
 
   {
-    // positive down, negative up
-    // js 1, upper, xyz
-    // js 2, lower, rpy
-    int movdx = map(analogRead(A0), 0, 1023, -1000, 1000);
-    int movdy = map(analogRead(A1), 0, 1023, -1000, 1000);
-    //int movdz = map(analogRead(A2), 0, 1023, -1000, 1000);
-    int movar = map(analogRead(A3), 0, 1023, -1000, 1000);
-    int movap = map(analogRead(A4), 0, 1023, -1000, 1000);
-    //int movay = map(analogRead(A5), 0, 1023, -1000, 1000);
-
-
     int which_display = DISPLAY_NOTHING;
     int posBtnState = pos_button.getState();
     int timeBtnState = time_button.getState();
@@ -426,23 +463,51 @@ void loop() {
     static bool non_jitter = false;
     if (posBtnState == HIGH) { // jitter or time
       if (timeBtnState == HIGH) { // jitter
-         if (non_jitter) {
-          non_jitter = false;
-          jitter_dirty = true;
-         }
-         if (xyzsel == HIGH) {
-          if (movdx > 0)      {jitterDX -= 0.001; jitter_dirty = true;}
-          else if (movdx < 0) {jitterDX += 0.001; jitter_dirty = true;}
-          if (movdy > 0)      {jitterDY -= 0.001; jitter_dirty = true;}
-          else if (movdy < 0) {jitterDY += 0.001; jitter_dirty = true;}
-          //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
-          //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
-          if (movar > 0)      {jitterAR -= 0.01; jitter_dirty = true;}
-          else if (movar < 0) {jitterAR += 0.01; jitter_dirty = true;}
-          if (movap > 0)      {jitterAP -= 0.01; jitter_dirty = true;}
-          else if (movap < 0) {jitterAP += 0.01; jitter_dirty = true;}
-          //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
-          //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
+        digitalWrite(JITTER_LED_PIN,   HIGH);
+        digitalWrite(POSITION_LED_PIN, LOW);
+        digitalWrite(TIME_LED_PIN,     LOW);
+        if (non_jitter) {
+         non_jitter = false;
+         jitter_dirty = true;
+        }
+        if (xyzsel == HIGH) {
+          int movdx = map(analogRead(A0), 0, 1023, 
+             0, MAX_POSITIONAL_JITTER);
+          int movdy = map(analogRead(A1), 0, 1023, 
+             0, MAX_POSITIONAL_JITTER);
+          int movdz = map(analogRead(A2), 0, 1023, 
+             0, MAX_POSITIONAL_JITTER);
+          int movar = map(analogRead(A3), 0, 1023, 
+             0, MAX_ROTATIONAL_JITTER);
+          int movap = map(analogRead(A4), 0, 1023, 
+             0, MAX_ROTATIONAL_JITTER);
+          int movay = map(analogRead(A5), 0, 1023, 
+             0, MAX_ROTATIONAL_JITTER);
+
+          double jdx = (((double)movdx) / 10.0);
+          double jdy = (((double)movdy) / 10.0);
+          double jdz = (((double)movdz) / 10.0);
+          double jar = (double)movar;
+          double jap = (double)movap;
+          double jay = (double)movay;
+          static double odx = 0.0/0.0;
+          static double ody = 0.0/0.0;
+          static double odz = 0.0/0.0;
+          static double oar = 0.0/0.0;
+          static double oap = 0.0/0.0;
+          static double oay = 0.0/0.0;
+          if (jdx != odx) 
+               {jitterDX = odx = jdx; jitter_dirty = true;}
+          if (jdy != ody)
+               {jitterDY = ody = jdy; jitter_dirty = true;}
+          if (jdz != odz) 
+               {jitterDZ = odz = jdz; jitter_dirty = true;}
+          if (jar != oar) 
+               {jitterAR = oar = jar; jitter_dirty = true;}
+          if (jap != oap) 
+               {jitterAP = oap = jap; jitter_dirty = true;}
+          if (jay != oay) 
+               {jitterAY = oay = jay; jitter_dirty = true;}
         }
         else {
           jitterDX = 0.0;
@@ -456,24 +521,67 @@ void loop() {
         which_display = DISPLAY_JITTER;
       }
       else {                 // time
-        updateDisplay(DISPLAY_TIME);
-        non_jitter = true;
+        if (xyzsel == HIGH) {
+          digitalWrite(JITTER_LED_PIN,   LOW);
+          digitalWrite(POSITION_LED_PIN, LOW);
+          digitalWrite(TIME_LED_PIN,     HIGH);
+          int movdx = map(analogRead(A0), 0, 1023,  0, 20);
+          int movdy = map(analogRead(A1), 0, 1023,  0, 20);
+          int movdz = map(analogRead(A2), 0, 1023,  0, 70);
+          static double odx = 0.0/0.0;
+          static double ody = 0.0/0.0;
+          static double odz = 0.0/0.0;
+          double jdx = ((double)movdx) / 10.0;
+          double jdy = ((double)movdy) / 10.0;
+          double jdz = ((double)movdz) / 10.0;
+          if (jdx != odx) 
+               {onset_time    = odx = jdx; time_dirty = true;}
+          if (jdy != ody) 
+               {relax_time    = ody = jdy; time_dirty = true;}
+          if (jdz != odz) 
+               {interval_time = odz = jdz; time_dirty = true;}
+          time_dirty = true;
+          non_jitter = true;
+        }
+        which_display = DISPLAY_TIME;
       }
     }
-    else {              // position // jitter
+    else {              // position
       if (xyzsel == HIGH) {
-       if (movdx > 0)      {myPlatform.dx -= 0.001; position_dirty = true;}
-       else if (movdx < 0) {myPlatform.dx += 0.001; position_dirty = true;}
-       if (movdy > 0)      {myPlatform.dy -= 0.001; position_dirty = true;}
-       else if (movdy < 0) {myPlatform.dy += 0.001; position_dirty = true;}
-       //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
-       //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
-       if (movar > 0)      {myPlatform.roll -= 0.001; position_dirty = true;}
-       else if (movar < 0) {myPlatform.roll += 0.001; position_dirty = true;}
-       if (movap > 0)      {myPlatform.pitch -= 0.001; position_dirty = true;}
-       else if (movap < 0) {myPlatform.pitch += 0.001; position_dirty = true;}
-       //if (movdz > 0)      {jitterDZ -= 0.1; jitter_dirty = true;}
-       //else if (movdz < 0) {jitterDZ += 0.1; jitter_dirty = true;}
+        digitalWrite(JITTER_LED_PIN,   LOW);
+        digitalWrite(POSITION_LED_PIN, HIGH);
+        digitalWrite(TIME_LED_PIN,     LOW);
+        int movdx = map(analogRead(A0), 0, 1023,  40, 70);
+        int movdy = map(analogRead(A1), 0, 1023,  40, 70);
+        int movdz = map(analogRead(A2), 0, 1023,  40, 70);
+        int movar = map(analogRead(A3), 0, 1023, -30, 30);
+        int movap = map(analogRead(A4), 0, 1023, -30, 30);
+        int movay = map(analogRead(A5), 0, 1023, -30, 30);
+        static double odx = 0.0/0.0;
+        static double ody = 0.0/0.0;
+        static double odz = 0.0/0.0;
+        static double oar = 0.0/0.0;
+        static double oap = 0.0/0.0;
+        static double oay = 0.0/0.0;
+
+        double jdx = (double)movdx;
+        double jdy = (double)movdy;
+        double jdz = (double)movdz;
+        double jar = (double)movar;
+        double jap = (double)movap;
+        double jay = (double)movay;
+        if (fabs(jdx) > 0.01) 
+               {myPlatform.dx = odx = jdx; position_dirty = true;}
+        if (fabs(jdy) > 0.01)
+               {myPlatform.dy = ody = jdy; position_dirty = true;}
+        if (fabs(jdz) > 0.01) 
+               {myPlatform.dz = odz = jdz; position_dirty = true;}
+        if (fabs(jar) > 1.0) 
+              {myPlatform.roll =  odx = jar; position_dirty = true;}
+        if (fabs(jap) > 1.0) 
+              {myPlatform.pitch = oap = jap; position_dirty = true;}
+        if (fabs(jay) > 1.0) 
+              {myPlatform.yaw =   oay = jay; position_dirty = true;}
       }
       else {
         myPlatform.dx = 0.0;
@@ -489,7 +597,8 @@ void loop() {
       non_jitter = true;
     }
     if (jitter_dirty |
-        position_dirty) {
+        position_dirty |
+        time_dirty) {
         update_alpha();
           updateDisplay(which_display);
         }
