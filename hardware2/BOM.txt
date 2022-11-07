@@ -1,0 +1,73 @@
+ 1 1 $46 $ 47	    Arduino Due
+ 2 8 $19 $114	    ZOSKAY servos
+ 3 1 $7  $  7	    1602 display
+ 4 2 $8  $ 16	    12x12 acrylic sheets (base and platform)
+ 5 1 $8  $  8	    8x6 acrylic sheet (control panel)
+ 6 2 $20 $ 40	    3-axis joysticks
+ 7 1 $30 $ 30	    JST connectors
+ 8 1 $14 $ 14	    headers
+ 9 1 $12 $ 12	    spacers
+10 1 $9  $  9	    switches
+11 1 $11 $ 11	    LEDs
+12 1 $7  $  6	    power connector
+13 1 $9  $  9	    5v power supply
+14 1 $17 $ 17	    6.8v power supply
+
+total    $300
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+arduino:
+https://store-usa.arduino.cc/collections/boards/products/arduino-due-without-headers
+
+servos:
+https://www.amazon.com/gp/product/B07KRMJTH5?noLL=1&askMessage=GENERIC_ERROR#Ask
+
+display:
+https://www.amazon.com/Qunqi-Serial-Backlight-Arduino-MEGA2560/dp/B01E4YUT3K/ref=sxin_24_ac_d_bv?ac_md=2-1-VW5kZXIgJDEw-ac_d_bv_bv_bv&content-id=amzn1.sym.14453ffd-7768-40d0-9a7f-8d0063113f56%3Aamzn1.sym.14453ffd-7768-40d0-9a7f-8d0063113f56&crid=28SEQV0TX7KT4&cv_ct_cx=1602+lcd&keywords=1602+lcd&pd_rd_i=B01E4YUT3K&pd_rd_r=f0947de9-bf9e-42c1-99c9-7b7a98739697&pd_rd_w=TCwIE&pd_rd_wg=CYRtc&pf_rd_p=14453ffd-7768-40d0-9a7f-8d0063113f56&pf_rd_r=1S6MTWNKVQRNQFRHXFG0&psc=1&qid=1667829452&sprefix=1602%2Caps%2C99&sr=1-2-270ce31b-afa8-499f-878b-3bb461a9a5a6
+
+acrylic:
+https://www.amazon.com/INTELLIMADE-Acrylic-Plexiglass-Protective-Projects/dp/B08Z1SQY7L/ref=sr_1_1_sspa?crid=3Q5ID01DZSQJV&keywords=acrylic+squares&qid=1667829768&sprefix=acrylic+squares%2Caps%2C165&sr=8-1-spons&psc=1&smid=A35AAP7UEB3WMD
+
+joysticks:
+https://www.amazon.com/LYWS-Joystick-Potentiometer-JH-D300X-R2-Thermistor/dp/B09JSLX6SH/ref=sr_1_4?crid=23QD2CUTMGLD0&keywords=3-axis+joystick+potentiometer&qid=1667830009&sprefix=3-axis%2Caps%2C94&sr=8-4
+
+JST connectors:
+https://www.amazon.com/Pieces-JST-PH-Connector-Female-Header/dp/B07P82QFXD/ref=sr_1_2_sspa?crid=CWLK5HI1HO8&keywords=jst+connectors&qid=1667830107&sprefix=jst+connectors%2Caps%2C95&sr=8-2-spons&psc=1
+
+headers:
+https://www.amazon.com/Glarks-Connector-Assortment-Stackable-Breakaway/dp/B07CWSXY7P/ref=sr_1_3?crid=3R89GUO23OT1J&keywords=pcb+headers&qid=1667830372&sprefix=pcb+headers%2Caps%2C89&sr=8-3
+
+spacers:
+https://www.amazon.com/Lystaii-Standoff-Motherboard-Standoffs-Assortment/dp/B08LPYR49C/ref=sr_1_3?crid=2S3EWRBTPFFTY&keywords=pcb+spacers&qid=1667830477&sprefix=pcb+spacers%2Caps%2C89&sr=8-3
+
+switches:
+https://www.amazon.com/OCR10Value-Colorful-Tactile-Momentary-Assortment/dp/B07BT96FKD/ref=sr_1_2_sspa?content-id=amzn1.sym.e2c28ff9-1053-428b-96a0-2b4986391ffa%3Aamzn1.sym.e2c28ff9-1053-428b-96a0-2b4986391ffa&crid=XI4HK8BQFMV6&keywords=switches&pd_rd_r=10992644-1d02-4372-bbb2-b4d788898c60&pd_rd_w=KuA6b&pd_rd_wg=j66iE&pf_rd_p=e2c28ff9-1053-428b-96a0-2b4986391ffa&pf_rd_r=QK3CV05EBQQPXA7J9KKK&pid=1Kd943O&qid=1667830658&s=industrial&sprefix=pcb+pushbutton%2Caps%2C99&sr=1-2-spons&psc=1
+
+LEDs:
+https://www.amazon.com/Emitting-Assortment-Voltage-Diffused-Indicator/dp/B07N2H23DC/ref=sr_1_8?crid=EYZU44GMYKEE&keywords=pcb+led&qid=1667830823&sprefix=pcb+led%2Caps%2C93&sr=8-8
+
+power connector:
+https://www.amazon.com/AiTrip-20pcs-Connector-Female-5-5x2-1mm/dp/B081DYQSC9/ref=sr_1_5?crid=10OBMQK21JUV6&keywords=pcb+power+connector&qid=1667830966&sprefix=pcb+power%2Caps%2C87&sr=8-5
+
+5v power supply:
+https://www.amazon.com/ALITOVE-100V-240V-Converter-5-5x2-1mm-Security/dp/B078RXZM4C/ref=sr_1_4?crid=19V3V5SRMPD7H&keywords=5v+power+supply&qid=1667831060&sprefix=5v+power+%2Caps%2C111&sr=8-4
+
+6.8v power supply:
+https://www.amazon.com/HART-HFSD01-Rechargeable-Power-Supply/dp/B09FXNGDS1/ref=sr_1_5?crid=2RYUK82CW48YY&keywords=6.8v+power+supply&qid=1667831256&sprefix=6.8v+power+supply%2Caps%2C105&sr=8-5
