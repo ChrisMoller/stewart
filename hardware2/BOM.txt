@@ -1,19 +1,22 @@
- 1 1 $46 $ 47	    Arduino Due
- 2 8 $19 $114	    ZOSKAY servos
- 3 1 $7  $  7	    1602 display
- 4 2 $8  $ 16	    12x12 acrylic sheets (base and platform)
- 5 1 $8  $  8	    8x6 acrylic sheet (control panel)
- 6 2 $20 $ 40	    3-axis joysticks
- 7 1 $30 $ 30	    JST connectors
- 8 1 $14 $ 14	    headers
- 9 1 $12 $ 12	    spacers
-10 1 $9  $  9	    switches
-11 1 $11 $ 11	    LEDs
-12 1 $7  $  6	    power connector
-13 1 $9  $  9	    5v power supply
-14 1 $17 $ 17	    6.8v power supply
+ 1  1 $46 $ 47	    Arduino Due
+ 2  8 $19 $114	    ZOSKAY servos
+ 3  1 $7  $  7	    1602 display
+ 4  2 $8  $ 16	    12x12 acrylic sheets (base and platform)
+ 5  1 $8  $  8	    8x6 acrylic sheet (control panel)
+ 6  2 $20 $ 40	    3-axis joysticks
+ 7  1 $30 $ 30	    JST connectors
+ 8  1 $14 $ 14	    headers
+ 9  1 $12 $ 12	    spacers
+10  1 $9  $  9	    switches
+11  1 $11 $ 11	    LEDs
+12  1 $7  $  6	    power connector
+13  1 $9  $  9	    5v power supply
+14  1 $17 $ 17	    6.8v power supply
+15 12 $3  $ 36	    plastic ball/socket joints
+16  1 $16 $ 16	    plexiglass blocks
+17  1 $15 $ 15	    plexiglass rods
 
-total    $300
+total    $367
 
 
 
@@ -71,3 +74,12 @@ https://www.amazon.com/ALITOVE-100V-240V-Converter-5-5x2-1mm-Security/dp/B078RXZ
 
 6.8v power supply:
 https://www.amazon.com/HART-HFSD01-Rechargeable-Power-Supply/dp/B09FXNGDS1/ref=sr_1_5?crid=2RYUK82CW48YY&keywords=6.8v+power+supply&qid=1667831256&sprefix=6.8v+power+supply%2Caps%2C105&sr=8-5
+
+ball/socket:
+https://www.automotioncomponents.co.uk/en/catalog/linkages-rotary-components/clevis-joints-turnbuckles-ball-socket-joint/ball-socket-joints/ball-socket-joints/r3520/g+m+c+s+a
+
+plexiglas blocks:
+https://www.amazon.com/Clear-Square-Acrylic-Plexiglass-Plastic/dp/B091NNMM54/ref=sr_1_5?crid=2Q8E8AK7M0F7Z&keywords=acrylic+square+rod+1+inch&qid=1667833739&sprefix=acrylic+square+rod+1+inch%2Caps%2C99&sr=8-5
+
+plexiglass rods:
+https://www.amazon.com/Pieces-Acrylic-Diameter-Decorations-Gardening/dp/B0B4JRXKHL/ref=sr_1_5?keywords=Best+Acrylics&qid=1667833963&sr=8-5
