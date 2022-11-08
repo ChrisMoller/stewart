@@ -1294,17 +1294,19 @@ keyboard (unsigned char key, int x, int y)
     case 'a': arm_length -= 0.1; set_h0 (); break;
     case 'A': arm_length += 0.1; set_h0 (); break;
     case 'd':
-      fprintf (stdout, "base:\n");
+      fprintf (stdout, "base: (cm)\n");
       for (int i = 0; i < servos.size (); i++) {
 	fprintf (stdout, "%d %g %g\n", i,
 		 servos[i]->pos.x,
 		 servos[i]->pos.y);
       }
-      fprintf (stdout, "\nplatform:\n");
+      fprintf (stdout, "\nplatform (cm):\n");
       for (int i = 0; i < platform->anchors.size (); i++) {
 	fprintf (stderr, "%d %g %g\n",
 		 i, platform->anchors[i].x, platform->anchors[i].z);
       }
+      fprintf (stdout, "\nArm length: %g cm\n", arm_length);
+      fprintf (stdout, "\nLeg length: %g cm\n", leg_length);
       break;
     case 'h':
     case 'H':
