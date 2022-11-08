@@ -71,10 +71,12 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 
 
 #define ARM_RADIUS	 0.2
-#define ARM_LENGTH	 2.0
+#define DEFAULT_ARM_LENGTH	 2.0
 #define SHAFT_DIAMETER	 0.5
 #define SHAFT_LENGTH	 1.0
-#define LEG_LENGTH	 9.0
+#define DEFAULT_LEG_LENGTH	 9.0		// fixme make adjustable
+double arm_length = DEFAULT_ARM_LENGTH;
+double leg_length = DEFAULT_LEG_LENGTH;
 
 #define PLATFORM_HEIGHT	 20.0
 
@@ -101,7 +103,21 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 	  |/
 	  o ------------> +x
  ***/
-#if 1
+#if 0				// in 30x30 cm base
+#define B0x -6.5
+#define B0y  6.1
+#define B1x -8.3
+#define B1y  3.0
+#define B2x -2.8
+#define B2y -8.5
+#define B3x  3.8 
+#define B3y -8.5
+#define B4x  8.3
+#define B4y  3.0
+#define B5x  6.5
+#define B5y  6.1
+#endif
+#if 1				// current
 #define B0x -5.40268
 #define B0y  2.60979
 #define B1x -5.40268
@@ -114,7 +130,8 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 #define B4y  3.37396
 #define B5x  0.441194
 #define B5y  5.98376
-#else
+#endif
+#if 0				// old
 #define B0x	-5.2		// cm coords wrt world origin
 #define B0y	 2.5
 #define B1x	-5.2
@@ -128,6 +145,23 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 #define B5x	 0.5
 #define B5y	 5.8
 #endif
+
+#define B0_ANGLE  2.69159
+#define B1_ANGLE -2.69159
+#define B2_ANGLE -1.4972
+#define B3_ANGLE -0.597197
+#define B4_ANGLE  0.597197
+#define B5_ANGLE  1.4972
+#define B0_AI	  0.020
+#define B1_AI	  0.021
+#define B2_AI	  0.018
+#define B3_AI	  0.022
+#define B4_AI	  0.017
+#define B5_AI	  0.006
+#define DEFAULT_BASE_RADIUS	6.0
+double base_radius = DEFAULT_BASE_RADIUS;
+
+
 
 #if 1
 #define SA0	M_PI_2			// radians shaft angle
@@ -161,6 +195,7 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 #define oP5y	B5y * ARBITRARY_PLATFORM_SCALE
 #endif
 
+#if 0
 #define P0x -1.430
 #define P0y  0.976
 #define P1x -1.432
@@ -173,7 +208,16 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 #define P4y  0.740
 #define P5x -0.130
 #define P5y  1.726
+#endif
 
+#define P0_ANGLE  2.54
+#define P1_ANGLE -2.54
+#define P2_ANGLE -1.65
+#define P3_ANGLE -0.44
+#define P4_ANGLE  0.44
+#define P5_ANGLE  1.65
+#define DEFAULT_PLATFORM_RADIUS	1.75
+double platform_radius = DEFAULT_PLATFORM_RADIUS;
 
 
 /************* end platform description ***************/
@@ -313,9 +357,6 @@ FILE* ffmpeg = NULL;
 std::vector<servo *> servos;
 _platform *platform;
 
-glm::vec3 textloc = glm::vec3 (0.0f, 0.0f, 0.0f);
-float testAng = 0.0f;
-
 spherical location = spherical (16.9, D2R (0.0), D2R (45.0));
 spherical centre   = spherical (0.0, 12.8, 0.0);
 
@@ -325,6 +366,24 @@ bool do_motion = true;
 bool demo_mode = false;
 
 double h0;				// base height based on geometry
+
+static void
+set_h0 ()
+{
+  h0 = 0.0;					// Eq 10
+  for (int i = 0; i < 6; i++) {
+    double xp = platform->anchors[i].x;		// anchor
+    double yp = platform->anchors[i].y;		// anchor
+    double xb = servos[i]->pos.x;		// servo
+    double yb = servos[i]->pos.y;		// servo
+    h0 += sqrt (pow (leg_length, 2.0) +
+		pow (arm_length, 2.0) -
+		(pow ((xp - xb), 2.0) +
+		pow ((yp - yb), 2.0)));
+
+  }
+  h0 /= 6.0;
+}
 
 static void
 set_colours (int i)
@@ -448,7 +507,7 @@ do_jitter ()
   case JITTER_ATTACK:
     base_x = platform->delta_x;
     base_y = platform->delta_y;
-    base_z = platform->delta_y;
+    base_z = platform->delta_z;
     base_p = platform->phi;
     base_t = platform->theta;
     base_r = platform->rho;
@@ -465,11 +524,11 @@ do_jitter ()
   case JITTER_ATTACK_CONTINUE:
     if (attack_stage < 10.0) {
       platform->delta_x = base_x + target_x * attack_stage / 10.0;
-      platform->delta_y = base_x + target_y * attack_stage / 10.0; 
-      platform->delta_z = base_x + target_z * attack_stage / 10.0; 
-      platform->phi     = base_x + target_p * attack_stage / 10.0;
-      platform->theta   = base_x + target_t * attack_stage / 10.0; 
-      platform->rho     = base_x + target_r * attack_stage / 10.0; 
+      platform->delta_y = base_y + target_y * attack_stage / 10.0; 
+      platform->delta_z = base_z + target_z * attack_stage / 10.0; 
+      platform->phi     = base_p + target_p * attack_stage / 10.0;
+      platform->theta   = base_t + target_t * attack_stage / 10.0; 
+      platform->rho     = base_r + target_r * attack_stage / 10.0; 
       attack_stage += 0.2;
       sleep_time = 1000;
     }
@@ -536,9 +595,9 @@ https://content.instructables.com/ORIG/FFI/8ZXW/I55MMY14/FFI8ZXWI55MMY14.pdf
     double beta = (i & 1) ? (M_PI/6.0) : (-M_PI/6.0);
     double l = (double)glm::length (deltaPB);
     double L  =
-      pow (l, 2.0) - (pow (LEG_LENGTH, 2.0) - pow (ARM_LENGTH, 2.0));
-    double M  = 2.0 * ARM_LENGTH * deltaPB.y;
-    double N  = 2.0 * ARM_LENGTH *
+      pow (l, 2.0) - (pow (leg_length, 2.0) - pow (arm_length, 2.0));
+    double M  = 2.0 * arm_length * deltaPB.y;
+    double N  = 2.0 * arm_length *
       (deltaPB.x * cos (beta) + deltaPB.z * sin (beta));
     N = -fabs (N);
     double arg = L / sqrt (pow (M, 2.0) + pow (N, 2.0));
@@ -614,19 +673,23 @@ init(void)
                  x
 
    ***/
+#if 1
+  set_h0 ();
+#else
   h0 = 0.0;					// Eq 10
   for (int i = 0; i < 6; i++) {
     double xp = platform->anchors[i].x;		// anchor
     double yp = platform->anchors[i].y;		// anchor
     double xb = servos[i]->pos.x;		// servo
     double yb = servos[i]->pos.y;		// servo
-    h0 += sqrt (pow (LEG_LENGTH, 2.0) +
-		pow (ARM_LENGTH, 2.0) -
+    h0 += sqrt (pow (leg_length, 2.0) +
+		pow (arm_length, 2.0) -
 		(pow ((xp - xb), 2.0) +
 		pow ((yp - yb), 2.0)));
 
   }
   h0 /= 6.0;
+#endif
   update_alpha ();
 	     
   GLfloat white[]       = { 1.0, 1.0, 1.0, 1.0 };
@@ -840,12 +903,12 @@ show_servos (glm::mat4 &baseXform)
 	glPushMatrix();
 	glm::mat4 fMtx = interMatrix * x90Mtx * alphaMtx;
 	glLoadMatrixf (glm::value_ptr (baseXform * fMtx));
-	glutSolidCylinder(ARM_RADIUS, ARM_LENGTH,  32,   32);
+	glutSolidCylinder(ARM_RADIUS, arm_length,  32,   32);
 	glutSolidSphere (0.3, 32, 32);  // shaft dot
         glFlush ();
         glPopMatrix();
 	interMatrix =
-	  glm::translate (fMtx, glm::vec3 (0.0f, 0.0f, ARM_LENGTH));  // 687
+	  glm::translate (fMtx, glm::vec3 (0.0f, 0.0f, arm_length));  // 687
 	servos[i]->servo_mtx = interMatrix;
       }
       glFlush ();
@@ -900,7 +963,7 @@ show_links (glm::mat4 &baseXform)
       glPushMatrix();
       glLoadMatrixf (glm::value_ptr ( baseXform * platform->anchor_mtx[i]));
       glutSolidSphere (0.6, 32, 32);
-      glutSolidCylinder(ARM_RADIUS, ARM_LENGTH,  32,   32);
+      glutSolidCylinder(ARM_RADIUS, arm_length,  32,   32);
       glFlush ();
       glPopMatrix();
     }
@@ -981,6 +1044,42 @@ reshape (int w, int h)
 }
 
 static void
+set_base_radius ()
+{
+  servos[0]->pos.x = base_radius * cos (B0_ANGLE);
+  servos[0]->pos.y = base_radius * sin (B0_ANGLE);
+  servos[1]->pos.x = base_radius * cos (B1_ANGLE);
+  servos[1]->pos.y = base_radius * sin (B1_ANGLE);
+  servos[2]->pos.x = base_radius * cos (B2_ANGLE);
+  servos[2]->pos.y = base_radius * sin (B2_ANGLE);
+  servos[3]->pos.x = base_radius * cos (B3_ANGLE);
+  servos[3]->pos.y = base_radius * sin (B3_ANGLE);
+  servos[4]->pos.x = base_radius * cos (B4_ANGLE);
+  servos[4]->pos.y = base_radius * sin (B4_ANGLE);
+  servos[5]->pos.x = base_radius * cos (B5_ANGLE);
+  servos[5]->pos.y = base_radius * sin (B5_ANGLE);;
+  set_h0 ();
+}
+
+static void
+set_platform_radius ()
+{
+  platform->anchors[0].x = platform_radius * cos (P0_ANGLE);
+  platform->anchors[0].z = platform_radius * sin (P0_ANGLE);
+  platform->anchors[1].x = platform_radius * cos (P1_ANGLE);
+  platform->anchors[1].z = platform_radius * sin (P1_ANGLE);
+  platform->anchors[2].x = platform_radius * cos (P2_ANGLE);
+  platform->anchors[2].z = platform_radius * sin (P2_ANGLE);
+  platform->anchors[3].x = platform_radius * cos (P3_ANGLE);
+  platform->anchors[3].z = platform_radius * sin (P3_ANGLE);
+  platform->anchors[4].x = platform_radius * cos (P4_ANGLE);
+  platform->anchors[4].z = platform_radius * sin (P4_ANGLE);
+  platform->anchors[5].x = platform_radius * cos (P5_ANGLE);
+  platform->anchors[5].z = platform_radius * sin (P5_ANGLE);;
+  set_h0 ();
+}
+
+static void
 specialkeys (int key, int x, int y)
 {
   // https://www.opengl.org/resources/libraries/glut/spec3/node54.html#SECTION00089000000000000000
@@ -1029,10 +1128,10 @@ specialkeys (int key, int x, int y)
       platform->delta_x += 0.2;
       break;
     case GLUT_KEY_DOWN:
-      platform->delta_z -= 0.2;
+      platform->delta_z += 0.2;
       break;
     case GLUT_KEY_UP:
-      platform->delta_z += 0.2;
+      platform->delta_z -= 0.2;
       break;
     case GLUT_KEY_HOME:
       platform->rho   = 0.0;
@@ -1044,6 +1143,56 @@ specialkeys (int key, int x, int y)
       break;
     }
   }
+}
+
+static void
+show_help ()
+{
+  fprintf (stdout, "\nKeys:\n");
+  fprintf (stdout, "\tr	platform roll right\n");
+  fprintf (stdout, "\tR	platform roll left\n");
+  fprintf (stdout, "\tp	platform pitch down\n");
+  fprintf (stdout, "\tP	platform pitch up\n");
+  fprintf (stdout, "\ty	platform yaw right\n");
+  fprintf (stdout, "\tY	platform yaw left\n");
+  fprintf (stdout, "\tleft arrow	platform shift left\n");
+  fprintf (stdout, "\tright arrow	platform shift right\n");
+  fprintf (stdout, "\tup arrow	platform shift forward\n");
+  fprintf (stdout, "\tdown arrow	platform shift backward\n");
+  fprintf (stdout, "\thome	platform reset to initial\n");
+  fprintf (stdout, "\td	platform lower\n");
+  fprintf (stdout, "\tu	platform raise\n");
+  fprintf (stdout, "\tm	pause motion\n");
+  fprintf (stdout, "\tM	resume motion\n");
+
+  fprintf (stdout, "\nControl Keys:\n");
+  fprintf (stdout, "\tctrl-d	zoom in\n");
+  fprintf (stdout, "\tctrl-D	zoom out\n");
+  fprintf (stdout, "\tctrl-a	view azimuth right\n");
+  fprintf (stdout, "\tctrl-A	view azimuth left\n");
+  fprintf (stdout, "\tctrl-e	view elevation down\n");
+  fprintf (stdout, "\tctrl-x	view pan left\n");
+  fprintf (stdout, "\tctrl-X	view pan right\n");
+  fprintf (stdout, "\tctrl-y	view pan down\n");
+  fprintf (stdout, "\tctrl-Y	view pan up\n");
+  fprintf (stdout, "\tctrl-z	view pan nearer\n");
+  fprintf (stdout, "\tctrl-Z	view pan farther\n");
+  fprintf (stdout, "\tctrl-left arrow	view pan left\n");
+  fprintf (stdout, "\tctrl-right arrow	view pan right\n");
+  fprintf (stdout, "\tctrl-up arrow	view pan down\n");
+  fprintf (stdout, "\tctrl-down arrow	view pan up\n");
+  fprintf (stdout, "\tctrl-home	view origin\n");
+
+  fprintf (stdout, "\nAlt Keys:\n");
+  fprintf (stdout, "\talt-r	reduce base radius\n");
+  fprintf (stdout, "\talt-R	increase base radius\n");
+  fprintf (stdout, "\talt-p	reduce platform radius\n");
+  fprintf (stdout, "\talt-P	increase platform radius\n");
+  fprintf (stdout, "\talt-l	decrease leg length\n");
+  fprintf (stdout, "\talt-L	increase leg length\n");
+  fprintf (stdout, "\talt-a	decrease arm length\n");
+  fprintf (stdout, "\talt-A	increase arm length\n");
+  fprintf (stdout, "\talt-d	display anchor points\n");
 }
 
 static void
@@ -1079,12 +1228,28 @@ keyboard (unsigned char key, int x, int y)
       showeye = true;
       break;	
     case 'e':				// elevation
-      location.decLatitude (D2R (1));
+      location.incLatitude (D2R (1));
       showeye = true;
       break;
     case 'E':
-      location.incLatitude (D2R (1));
+      location.decLatitude (D2R (1));
       showeye = true;
+      break;
+    case 'x':
+      centre.x -= 0.1;
+      showlook = true;
+      break;
+    case 'X':
+      centre.x += 0.1;
+      showlook = true;
+      break;
+    case 'y':
+      centre.y -= 0.1;
+      showlook = true;
+      break;
+    case 'Y':
+      centre.y += 0.1;
+      showlook = true;
       break;
     case 'z':
       centre.z -= 0.1;
@@ -1103,6 +1268,10 @@ keyboard (unsigned char key, int x, int y)
       fprintf (stderr, "ctrl-e/E - eye elevation");
       fprintf (stderr, "ctrl-z/Z - lookat z");
       break;
+    case 'h':
+    case 'H':
+      show_help ();
+      break;
     }
 #if 0
     if (showeye)
@@ -1116,19 +1285,32 @@ keyboard (unsigned char key, int x, int y)
   else if ((mod & ~GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_ALT) {
     bool showit = false;
     switch(key) {
-    case 'x': textloc.x -= 0.1f; showit = true; break;
-    case 'X': textloc.x += 0.1f; showit = true; break;
-    case 'y': textloc.y -= 0.1f; showit = true; break;
-    case 'Y': textloc.y += 0.1f; showit = true; break;
-    case 'z': textloc.z -= 0.1f; showit = true; break;
-    case 'Z': textloc.z += 0.1f; showit = true; break;
-    case 'a': testAng -= 0.01f; break;
-    case 'A': testAng += 0.01f; break;
+    case 'r': base_radius -= 0.1; set_base_radius (); break;
+    case 'R': base_radius += 0.1; set_base_radius (); break;
+    case 'p': platform_radius -= 0.1; set_platform_radius (); break;
+    case 'P': platform_radius += 0.1; set_platform_radius (); break;
+    case 'l': leg_length -= 0.1; set_h0 (); break;
+    case 'L': leg_length += 0.1; set_h0 (); break;
+    case 'a': arm_length -= 0.1; set_h0 (); break;
+    case 'A': arm_length += 0.1; set_h0 (); break;
+    case 'd':
+      fprintf (stdout, "base:\n");
+      for (int i = 0; i < servos.size (); i++) {
+	fprintf (stdout, "%d %g %g\n", i,
+		 servos[i]->pos.x,
+		 servos[i]->pos.y);
+      }
+      fprintf (stdout, "\nplatform:\n");
+      for (int i = 0; i < platform->anchors.size (); i++) {
+	fprintf (stderr, "%d %g %g\n",
+		 i, platform->anchors[i].x, platform->anchors[i].z);
+      }
+      break;
+    case 'h':
+    case 'H':
+      show_help ();
+      break;
     }
-#if 0
-    if (showit)
-      fprintf (stderr, "txt %g %g %g\n", textloc.x, textloc.y, textloc.z);
-#endif
   }
   else {	// move platform un-ctrled, un-alted
     switch (key) {
@@ -1168,6 +1350,10 @@ keyboard (unsigned char key, int x, int y)
       break;
     case 'M':
       do_motion = true;
+      break;
+    case 'h':
+    case 'H':
+      show_help ();
       break;
     }
   }
@@ -1240,20 +1426,60 @@ main(int argc, char **argv)
 
  
   platform = new _platform ();
-  platform->set_anchor (P0x, P0y);
-  platform->set_anchor (P1x, P1y);
-  platform->set_anchor (P2x, P2y);
-  platform->set_anchor (P3x, P3y);
-  platform->set_anchor (P4x, P4y);
-  platform->set_anchor (P5x, P5y);
+  platform->set_anchor (platform_radius * cos (P0_ANGLE),
+			platform_radius * sin (P0_ANGLE));
+  platform->set_anchor (platform_radius * cos (P1_ANGLE),
+			platform_radius * sin (P1_ANGLE));
+  platform->set_anchor (platform_radius * cos (P2_ANGLE),
+			platform_radius * sin (P2_ANGLE));
+  platform->set_anchor (platform_radius * cos (P3_ANGLE),
+			platform_radius * sin (P3_ANGLE));
+  platform->set_anchor (platform_radius * cos (P4_ANGLE),
+			platform_radius * sin (P4_ANGLE));
+  platform->set_anchor (platform_radius * cos (P5_ANGLE),
+			platform_radius * sin (P5_ANGLE));
+#if 0
+  {
+    double srad = 0.0;
+    for (int i = 0; i < platform->anchors.size (); i++) {
+      double ang = atan2 (platform->anchors[i].z, platform->anchors[i].x);
+      double rad = hypot (platform->anchors[i].z, platform->anchors[i].x);
+      srad += rad;
+      fprintf (stderr, "\n%d %g %g rad %g ang %g\n",
+	       i, platform->anchors[i].x, platform->anchors[i].z,
+	       rad, ang);
+    }
+    fprintf (stderr, "avg rad = %g\n", srad /6.0);
+  }
+#endif
 
 #define M_270 (3.0 * M_PI_2)
-  servos.push_back (new servo (B0x, B0y, SA0,	M_PI_2,	 0.020));
-  servos.push_back (new servo (B1x, B1y, SA1,   M_270,	-0.021));
-  servos.push_back (new servo (B2x, B2y, SA2,   M_PI_2,	 0.018));
-  servos.push_back (new servo (B3x, B3y, SA3,  	M_270,	-0.022));
-  servos.push_back (new servo (B4x, B4y, SA4,   M_PI_2,	 0.017));
-  servos.push_back (new servo (B5x, B5y, SA5,   M_270,	-0.006));
+  servos.push_back (new servo (base_radius * cos (B0_ANGLE),
+			       base_radius * sin (B0_ANGLE),
+			       SA0, M_PI_2, B0_AI));
+  servos.push_back (new servo (base_radius * cos (B1_ANGLE),
+			       base_radius * sin (B1_ANGLE),
+			       SA1, M_PI_2, B1_AI));
+  servos.push_back (new servo (base_radius * cos (B2_ANGLE),
+			       base_radius * sin (B2_ANGLE),
+			       SA2, M_PI_2, B2_AI));
+  servos.push_back (new servo (base_radius * cos (B3_ANGLE),
+			       base_radius * sin (B3_ANGLE),
+			       SA3, M_PI_2, B3_AI));
+  servos.push_back (new servo (base_radius * cos (B4_ANGLE),
+			       base_radius * sin (B4_ANGLE),
+			       SA4, M_PI_2, B4_AI));
+  servos.push_back (new servo (base_radius * cos (B5_ANGLE),
+			       base_radius * sin (B5_ANGLE),
+			       SA5, M_PI_2, B5_AI));
+#if 0
+  for (int i = 0; i < servos.size (); i++) {
+    fprintf (stderr, "\n%d %g %g rad %g ang %g\n",
+	     i, servos[i]->pos.x, servos[i]->pos.y,
+	     hypot (servos[i]->pos.x, servos[i]->pos.y),
+	     atan2 (servos[i]->pos.y, servos[i]->pos.x));
+  }
+#endif
   
   glutInit(&argc, argv);
 
@@ -1267,6 +1493,9 @@ main(int argc, char **argv)
   glutKeyboardFunc (keyboard);
   glutSpecialFunc (specialkeys);
   glutIdleFunc (spin);
+
+  //https://stackoverflow.com/questions/36314690/c-fprintf-with-colors
+  fprintf (stdout, "\nPress h for help\n\n");
   glutMainLoop ();
 
   return 0;

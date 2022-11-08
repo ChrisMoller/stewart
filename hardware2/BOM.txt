@@ -3,23 +3,24 @@
  3  1 $7  $  7	    1602 display
  4  2 $8  $ 16	    12x12 acrylic sheets (base and platform)
  5  1 $8  $  8	    8x6 acrylic sheet (control panel)
- 6  2 $20 $ 40	    3-axis joysticks
+ 6  2 $20 $ 40	    3-axis joysticks (40mm hole, 60mm bezel)
  7  1 $30 $ 30	    JST connectors
  8  1 $14 $ 14	    headers
  9  1 $12 $ 12	    spacers
-10  1 $9  $  9	    switches
+10  1 $9  $  9	    switches  (12mm hole)
 11  1 $11 $ 11	    LEDs
 12  1 $7  $  6	    power connector
 13  1 $9  $  9	    5v power supply
 14  1 $17 $ 17	    6.8v power supply
-15 12 $3  $ 36	    plastic ball/socket joints
+15 12 $3  $ 36	    plastic ball/socket joints*
 16  1 $16 $ 16	    plexiglass blocks
 17  1 $15 $ 15	    plexiglass rods
+18  1 $32 $ 32	    PCB (for 3, same price as 1)
 
-total    $367
+total    $399
 
 
-
+* unless Rob can 3D-print them
 
 
 
@@ -61,7 +62,7 @@ spacers:
 https://www.amazon.com/Lystaii-Standoff-Motherboard-Standoffs-Assortment/dp/B08LPYR49C/ref=sr_1_3?crid=2S3EWRBTPFFTY&keywords=pcb+spacers&qid=1667830477&sprefix=pcb+spacers%2Caps%2C89&sr=8-3
 
 switches:
-https://www.amazon.com/OCR10Value-Colorful-Tactile-Momentary-Assortment/dp/B07BT96FKD/ref=sr_1_2_sspa?content-id=amzn1.sym.e2c28ff9-1053-428b-96a0-2b4986391ffa%3Aamzn1.sym.e2c28ff9-1053-428b-96a0-2b4986391ffa&crid=XI4HK8BQFMV6&keywords=switches&pd_rd_r=10992644-1d02-4372-bbb2-b4d788898c60&pd_rd_w=KuA6b&pd_rd_wg=j66iE&pf_rd_p=e2c28ff9-1053-428b-96a0-2b4986391ffa&pf_rd_r=QK3CV05EBQQPXA7J9KKK&pid=1Kd943O&qid=1667830658&s=industrial&sprefix=pcb+pushbutton%2Caps%2C99&sr=1-2-spons&psc=1
+https://www.amazon.com/Gikfun-Waterproof-Button-Momentary-Arduino/dp/B07F8GBWGG/ref=sxin_16_ac_d_rm?ac_md=1-1-bW9tZW50YXJ5IHB1c2ggYnV0dG9uIHN3aXRjaA%3D%3D-ac_d_rm_rm_rm&content-id=amzn1.sym.568df61d-e115-4cb1-a96a-ba070b8f0935%3Aamzn1.sym.568df61d-e115-4cb1-a96a-ba070b8f0935&cv_ct_cx=momentary+push+button&keywords=momentary+push+button&pd_rd_i=B07F8GBWGG&pd_rd_r=cdf99160-cc25-4a98-b3e5-dee1b8c02cc1&pd_rd_w=rQi2L&pd_rd_wg=QiYEK&pf_rd_p=568df61d-e115-4cb1-a96a-ba070b8f0935&pf_rd_r=SX4E421AQ5MJJ4B05T4K&psc=1&qid=1667869438&sr=1-2-7d9bfb42-6e38-4445-b604-42cab39e191b
 
 LEDs:
 https://www.amazon.com/Emitting-Assortment-Voltage-Diffused-Indicator/dp/B07N2H23DC/ref=sr_1_8?crid=EYZU44GMYKEE&keywords=pcb+led&qid=1667830823&sprefix=pcb+led%2Caps%2C93&sr=8-8
@@ -83,3 +84,6 @@ https://www.amazon.com/Clear-Square-Acrylic-Plexiglass-Plastic/dp/B091NNMM54/ref
 
 plexiglass rods:
 https://www.amazon.com/Pieces-Acrylic-Diameter-Decorations-Gardening/dp/B0B4JRXKHL/ref=sr_1_5?keywords=Best+Acrylics&qid=1667833963&sr=8-5
+
+PCB:
+fritzing
