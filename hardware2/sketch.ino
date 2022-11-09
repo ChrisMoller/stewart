@@ -310,14 +310,15 @@ cvtFlt(int scale, char *buf, double val)
   int src_len = sprintf(lclbuf, "%d", ivl);
   int src; 
   int dst = 0;
-  if (src_len < 5) 
-    for (; dst < 5-src_len; dst++) buf[dst] = ' ';
-  for (src = 0; dst < BUFLEN && lclbuf[src]; ) {
-    buf[dst++] = lclbuf[src++];
-    if (do_dec && src == src_len - 1) 
-        buf[dst++] = '.';
+  memset(buf, ' ', 5);
+  buf[5] = 0;
+  for (src = src_len - 1, dst = 4; dst >= 0 && src >= 0; ) {
+    buf[dst--] = lclbuf[src--];
+    if (do_dec && dst  == 3) {
+      buf[dst--] = '.';
+      buf[dst] = '0';
+    }
   }
-  buf[dst] = 0;
 }
 
 enum {
@@ -445,7 +446,87 @@ void setup() {
   update_alpha ();
   pincr = ((double)random(1000))/10000.0;
 }
+enum {
+  JITTER_QUIET,
+  JITTER_ONSET,
+  JITTER_ONSET_CONTINUE,
+  JITTER_RELAX
+};
 
+#define TO_US(s) ((unsigned int)((s) * 1000000))
+int jitter_mode = JITTER_ONSET;
+
+static void
+do_jitter()
+{
+  unsigned int sleep_time = TO_US(interval_time);
+  static double target_dx;
+  static double target_dy;
+  static double target_dz;
+  static double target_ap;
+  static double target_ay;
+  static double target_ar;
+  static double attack_stage;
+  static double base_dx;
+  static double base_dy;
+  static double base_dz;
+  static double base_ap;
+  static double base_ay;
+  static double base_ar;
+  
+  switch (jitter_mode) {
+  case JITTER_QUIET:		// do nothing
+    break;
+  case JITTER_ONSET:
+    base_dx = myPlatform.dx;
+    base_dy = myPlatform.dy;
+    base_dz = myPlatform.dz;
+    base_ap = myPlatform.pitch;
+    base_ay = myPlatform.yaw;
+    base_ar = myPlatform.roll;
+	
+    target_dx = random ((double)(-2000, 2000))/ 1000.0;
+    target_dy = random ((double)(-2000, 2000))/ 1000.0;
+    target_dz = random ((double)(-2000, 2000))/ 1000.0;
+    target_ap = random ((double)(-2000, 2000))/ 10000.0;
+    target_ay = random ((double)(-2000, 2000))/ 10000.0;
+    target_ar = random ((double)(-2000, 2000))/ 10000.0;
+    attack_stage = 0.0;
+    jitter_mode = JITTER_ONSET_CONTINUE;
+    //break;					no break
+  case JITTER_ONSET_CONTINUE:
+    if (attack_stage < 10.0) {
+      myPlatform.dx    = base_dx + target_dx * attack_stage / 10.0;
+      myPlatform.dy    = base_dy + target_dy * attack_stage / 10.0; 
+      myPlatform.dz    = base_dz + target_dz * attack_stage / 10.0; 
+      myPlatform.pitch = base_ap + target_ap * attack_stage / 10.0;
+      myPlatform.yaw   = base_ay + target_ay * attack_stage / 10.0; 
+      myPlatform.roll  = base_ar + target_ar * attack_stage / 10.0; 
+      attack_stage += 0.2;
+    }
+    else jitter_mode = JITTER_RELAX;
+    break;
+  case JITTER_RELAX:
+    if (attack_stage > 0.0) {
+      myPlatform.dx    = target_dx * attack_stage / 10.0;
+      myPlatform.dy    = target_dy * attack_stage / 10.0; 
+      myPlatform.dz    = target_dz * attack_stage / 10.0; 
+      myPlatform.pitch = target_ap * attack_stage / 10.0;
+      myPlatform.yaw   = target_ay * attack_stage / 10.0; 
+      myPlatform.roll  = target_ar * attack_stage / 10.0; 
+      attack_stage -= 0.1;
+      sleep_time = TO_US(relax_time/10.0);
+    }
+    else {
+      jitter_mode = JITTER_ONSET;
+      sleep_time = TO_US(interval_time);
+    }
+    break;
+  }
+  update_alpha();
+  updateDisplay(DISPLAY_POSITION);  // fixme
+  delayMicroseconds(sleep_time);
+}
 
 void loop() {
   rs_button.loop();
@@ -471,6 +552,44 @@ void loop() {
          jitter_dirty = true;
         }
         if (xyzsel == HIGH) {
+#if 1
+          int movdx = map(analogRead(A0), 0, 1023, 
+             -100, 100);
+          int movdy = map(analogRead(A1), 0, 1023, 
+             -100, 100);
+          int movdz = map(analogRead(A2), 0, 1023, 
+             -100, 100);
+          int movar = map(analogRead(A3), 0, 1023, 
+             -100, 100);
+          int movap = map(analogRead(A4), 0, 1023, 
+             -100, 100);
+          int movay = map(analogRead(A5), 0, 1023, 
+             -100, 100);
+          double jdx = (((double)movdx) / 5000.0);
+          double jdy = (((double)movdy) / 5000.0);
+          double jdz = (((double)movdz) / 5000.0);
+          double jar = (((double)movar) / 5000.0);
+          double jap = (((double)movap) / 5000.0);
+          double jay = (((double)movay) / 5000.0);
+          static double odx = 0.0/0.0;
+          static double ody = 0.0/0.0;
+          static double odz = 0.0/0.0;
+          static double oar = 0.0/0.0;
+          static double oap = 0.0/0.0;
+          static double oay = 0.0/0.0;
+          if (jdx != odx && fabs(jdx) > 0.006) 
+               {odx = (jitterDX += jdx); jitter_dirty = true;}
+          if (jdy != ody && fabs(jdy) > 0.006)
+               {ody = (jitterDY += jdy); jitter_dirty = true;}
+          if (jdz != odz && fabs(jdz) > 0.006) 
+               {odz = (jitterDZ += jdz); jitter_dirty = true;}
+          if (jar != oar && fabs(jar) > 0.006) 
+               {oar = (jitterAR += jar); jitter_dirty = true;}
+          if (jap != oap && fabs(jap) > 0.006) 
+               {oap = (jitterAP += jap); jitter_dirty = true;}
+          if (jay != oay && fabs(jay) > 0.006) 
+               {oay = (jitterAY += jay); jitter_dirty = true;}
+#else
           int movdx = map(analogRead(A0), 0, 1023, 
              0, MAX_POSITIONAL_JITTER);
           int movdy = map(analogRead(A1), 0, 1023, 
@@ -508,6 +627,7 @@ void loop() {
                {jitterAP = oap = jap; jitter_dirty = true;}
           if (jay != oay) 
                {jitterAY = oay = jay; jitter_dirty = true;}
+#endif
         }
         else {
           jitterDX = 0.0;
@@ -525,6 +645,26 @@ void loop() {
           digitalWrite(JITTER_LED_PIN,   LOW);
           digitalWrite(POSITION_LED_PIN, LOW);
           digitalWrite(TIME_LED_PIN,     HIGH);
+#if 1
+          int movdx = map(analogRead(A0), 0, 1023, 
+             -100, 100);
+          int movdy = map(analogRead(A1), 0, 1023, 
+             -100, 100);
+          int movdz = map(analogRead(A2), 0, 1023, 
+             -100, 100);
+          double jdx = (((double)movdx) / 5000.0);
+          double jdy = (((double)movdy) / 5000.0);
+          double jdz = (((double)movdz) / 5000.0);
+          static double odx = 0.0/0.0;
+          static double ody = 0.0/0.0;
+          static double odz = 0.0/0.0;
+          if (jdx != odx && fabs(jdx) > 0.006) 
+               {odx = (onset_time += jdx); time_dirty = true;}
+          if (jdy != ody && fabs(jdy) > 0.006)
+               {ody = (relax_time += jdy); time_dirty = true;}
+          if (jdz != odz && fabs(jdz) > 0.006) 
+               {odz = (interval_time += jdz); time_dirty = true;}
+#else
           int movdx = map(analogRead(A0), 0, 1023,  0, 20);
           int movdy = map(analogRead(A1), 0, 1023,  0, 20);
           int movdz = map(analogRead(A2), 0, 1023,  0, 70);
@@ -540,6 +680,7 @@ void loop() {
                {relax_time    = ody = jdy; time_dirty = true;}
           if (jdz != odz) 
                {interval_time = odz = jdz; time_dirty = true;}
+#endif
           time_dirty = true;
           non_jitter = true;
         }
@@ -551,6 +692,44 @@ void loop() {
         digitalWrite(JITTER_LED_PIN,   LOW);
         digitalWrite(POSITION_LED_PIN, HIGH);
         digitalWrite(TIME_LED_PIN,     LOW);
+#if 1
+          int movdx = map(analogRead(A0), 0, 1023, 
+             -100, 100);
+          int movdy = map(analogRead(A1), 0, 1023, 
+             -100, 100);
+          int movdz = map(analogRead(A2), 0, 1023, 
+             -100, 100);
+          int movar = map(analogRead(A3), 0, 1023, 
+             -100, 100);
+          int movap = map(analogRead(A4), 0, 1023, 
+             -100, 100);
+          int movay = map(analogRead(A5), 0, 1023, 
+             -100, 100);
+          double jdx = (((double)movdx) / 500.0);
+          double jdy = (((double)movdy) / 500.0);
+          double jdz = (((double)movdz) / 500.0);
+          double jar = (((double)movar) / 5.0);
+          double jap = (((double)movap) / 5.0);
+          double jay = (((double)movay) / 5.0);
+          static double odx = 0.0/0.0;
+          static double ody = 0.0/0.0;
+          static double odz = 0.0/0.0;
+          static double oar = 0.0/0.0;
+          static double oap = 0.0/0.0;
+          static double oay = 0.0/0.0;
+          if (jdx != odx && fabs(jdx) > 0.006) 
+               {odx = (myPlatform.dx += jdx);  position_dirty = true;}
+          if (jdy != ody && fabs(jdy) > 0.006)
+               {ody = (myPlatform.dy += jdy); position_dirty = true;}
+          if (jdz != odz && fabs(jdz) > 0.006) 
+               {odz = (myPlatform.dz += jdz); position_dirty = true;}
+          if (jar != oar && fabs(jar) > 0.006) 
+               {oar = (myPlatform.roll += jar); position_dirty = true;}
+          if (jap != oap && fabs(jap) > 0.006) 
+               {oap = (myPlatform.pitch += jap); position_dirty = true;}
+          if (jay != oay && fabs(jay) > 0.006) 
+               {oay = (myPlatform.yaw += jay); position_dirty = true;}
+#else
         int movdx = map(analogRead(A0), 0, 1023,  40, 70);
         int movdy = map(analogRead(A1), 0, 1023,  40, 70);
         int movdz = map(analogRead(A2), 0, 1023,  40, 70);
@@ -582,6 +761,7 @@ void loop() {
               {myPlatform.pitch = oap = jap; position_dirty = true;}
         if (fabs(jay) > 1.0) 
               {myPlatform.yaw =   oay = jay; position_dirty = true;}
+#endif
       }
       else {
         myPlatform.dx = 0.0;
@@ -612,6 +792,7 @@ void loop() {
   }
     
   if (runState) {
+#if 0
     myPlatform.yaw += pincr;
     if (myPlatform.yaw > 10.0) {
       pincr = -pincr;
@@ -622,6 +803,9 @@ void loop() {
       myPlatform.yaw = -10.0;
    }
    update_alpha();
+   delay( 2);
+#else
+    do_jitter();
+#endif
   }
- delay( 2);
 }
