@@ -33,6 +33,7 @@ Stewart. If not, see <https://www.gnu.org/licenses/>.
 #include <vector>
 #include <map>
 #include <string>
+#include <cstdlib>
 
 #include <GL/glew.h>
 #include <GL/freeglut.h>
@@ -80,29 +81,6 @@ double leg_length = DEFAULT_LEG_LENGTH;
 
 #define PLATFORM_HEIGHT	 20.0
 
-/***
-         5
-             4
-    0
-
-    1
-             3
-          2
-
-
-
-	  
-                 +z
-	  +y      ^
-	  ^      /
-	  |     /
-	  |    /
-	  |   /
-	  |  /
-	  | /
-	  |/
-	  o ------------> +x
- ***/
 #if 0				// in 30x30 cm base
 #define B0x -6.5
 #define B0y  6.1
@@ -117,7 +95,7 @@ double leg_length = DEFAULT_LEG_LENGTH;
 #define B5x  6.5
 #define B5y  6.1
 #endif
-#if 1				// current
+#if 0				// current
 #define B0x -5.40268
 #define B0y  2.60979
 #define B1x -5.40268
@@ -219,8 +197,6 @@ double base_radius = DEFAULT_BASE_RADIUS;
 #define DEFAULT_PLATFORM_RADIUS	1.75
 double platform_radius = DEFAULT_PLATFORM_RADIUS;
 
-
-/************* end platform description ***************/
 
 
 /**************** classes and typdefs  ****************/
@@ -338,6 +314,64 @@ public:
 };
 
 /**************** end classes  ****************/
+
+namespace sps {
+  namespace colors {
+    enum color {
+      none    = 0x00,
+      black   = 0x01,
+      red     = 0x02,
+      green   = 0x03,
+      yellow  = 0x04,
+      blue    = 0x05,
+      magenta = 0x06,
+      cyan    = 0x07,
+      white   = 0x08
+    };
+  }
+  namespace faces {
+    enum face {
+      normal    = 0x00,
+      bold      = 0x01,
+      dark      = 0x02,
+      uline     = 0x04,
+      invert    = 0x07,
+      invisible = 0x08,
+      cline     = 0x09
+    };
+  }
+
+  std::string set_color(sps::colors::color foreground = sps::colors::none,
+			sps::colors::color background = sps::colors::none) {
+    std::stringstream s;
+    s << "\033[";
+    if (!foreground && ! background){
+        s << "0"; // reset colors if no params
+    }
+    if (foreground) {
+        s << 29 + foreground;
+        if (background) s << ";";
+    }
+    if (background) {
+        s << 39 + background;
+    }
+    s << "m";
+    return s.str();
+  }
+
+  std::string set_face(sps::faces::face face = sps::faces::normal) {
+    std::stringstream s;
+    s << "\033[";
+    if (!face) {
+        s << "0"; // reset face
+    }
+    if (face) {
+      s << face;
+    }
+    s << "m";
+    return s.str();
+  }
+}
 
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
@@ -641,55 +675,7 @@ update_positions ()
 static void
 init(void)
 {
-
-  /***
-      page 4
-      
-      Ai are the points of the arm/leg joint on the servo with coordinates
-
-      a = [xa, ya, za] in the base framework.
-
-      Bi are the points of rotation of the servo arms with the coordinates
-
-      b = [xb, yb, zb] in the base framework.
-
-      Pi are the points the joints between the operating rods and the platform,
-
-      p = [xp, yp, zp] with coordinates in the platform framework
-
-      z                 P = [platform->anchors[i].x, platform->anchors[i].y, 0]
-      o------------------o
-      |                   \
-      |                    \
-      |                     \
-      |                      \  
-      |                       \
-      |                        \
-      |    y                    \
-      |   /                      o A = [sqrt(xb^2 + AL^2), yb + AL, 0]
-      |  /                      /                     
-      | /                      /
-      o--------------------->o B = [servos[i]->pos.x, servos[i]->pos.y, 0]
-                 x
-
-   ***/
-#if 1
   set_h0 ();
-#else
-  h0 = 0.0;					// Eq 10
-  for (int i = 0; i < 6; i++) {
-    double xp = platform->anchors[i].x;		// anchor
-    double yp = platform->anchors[i].y;		// anchor
-    double xb = servos[i]->pos.x;		// servo
-    double yb = servos[i]->pos.y;		// servo
-    h0 += sqrt (pow (leg_length, 2.0) +
-		pow (arm_length, 2.0) -
-		(pow ((xp - xb), 2.0) +
-		pow ((yp - yb), 2.0)));
-
-  }
-  h0 /= 6.0;
-#endif
   update_alpha ();
 	     
   GLfloat white[]       = { 1.0, 1.0, 1.0, 1.0 };
@@ -932,8 +918,6 @@ show_links (glm::mat4 &baseXform)
       glm::vec4 (0.0f, 0.0f, 0.0f, 1.0f);
     glm::vec4 delta4 = anc_loc - svo_loc;
     glm::vec3 delta = glm::vec3 (delta4);
-
-    //    fprintf (stderr, "%d length %g\n", i, (double)glm::length (delta));
 
     float dotprod = glm::dot (delta, glm::vec3 (0.0f, 0.0f, 1.0f));
     float ang = (float)(acos (dotprod / glm::length (delta)));
@@ -1364,10 +1348,8 @@ keyboard (unsigned char key, int x, int y)
 int
 main(int argc, char **argv)
 {
-  signal (SIGINT, enditall);
-  srand48 (time (NULL));
-
   {
+#define GET_HELP  1000
     static struct option long_options[] = {
       {"width",		required_argument, 0,  'w' },
       {"height",	required_argument, 0,  'h' },
@@ -1375,6 +1357,7 @@ main(int argc, char **argv)
       {"once",		no_argument,       0,  'o' },
       {"demo",		no_argument, 	   0,  'd' },
       {"motion",	no_argument, 	   0,  'm' },
+      {"help",		no_argument, 	   0,   GET_HELP },
       {0, 0, 0, 0 }
     };
 
@@ -1402,9 +1385,30 @@ main(int argc, char **argv)
       case 'm':
 	do_motion = true;
 	break;
+      case GET_HELP:
+	fprintf (stderr, "\t-w v\n");
+	fprintf (stderr, "\t--width=v\tset window width\n");
+	
+	fprintf (stderr, "\t-h v\n");
+	fprintf (stderr, "\t--height=v\tset window height\n");
+	
+	fprintf (stderr, "\t-r [s]\n");
+	fprintf (stderr, "\t--record=[s]\tset recording and optionall filename\n");
+	
+	fprintf (stderr, "\t-o\n");
+	fprintf (stderr, "\t--once\tstop after one iteration\n");
+	
+	fprintf (stderr, "\t-d\n");
+	fprintf (stderr, "\t--demo\tstart in demo mode\n");
+	
+	return 1;
+	break;
       }
     }
   }
+
+  signal (SIGINT, enditall);
+  srand48 (time (NULL));
 
   // https://computergraphics.stackexchange.com/questions/5606/opengl-animation-turn-into-mp4-movie
 
@@ -1497,7 +1501,16 @@ main(int argc, char **argv)
   glutIdleFunc (spin);
 
   //https://stackoverflow.com/questions/36314690/c-fprintf-with-colors
-  fprintf (stdout, "\nPress h for help\n\n");
+
+  {
+  using namespace sps;
+  std::cout << set_color (colors::red)
+	    << set_face (faces::bold)
+	    << set_face (faces::invert)
+	    << "\n            Press h for help            \n\n"
+	    << set_color() << std::endl;
+  }
+  
   glutMainLoop ();
 
   return 0;

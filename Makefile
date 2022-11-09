@@ -10,11 +10,12 @@ GL_CFLAGS = -O2
             popen2.h  \
             README.md  \
             stewart.cpp
+     OBJS = stewart.o popen2.o
 
 %.o:%.cpp
 	g++ -c $(GL_CFLAGS) $<
 
-stewart: stewart.o popen2.o
+stewart: $(OBJS)
 	g++ -o $@ $(LDFLAGS) $^ $(LIBS) $(GL_LIBS)
 
 clean:
