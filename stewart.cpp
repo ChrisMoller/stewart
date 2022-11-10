@@ -1509,16 +1509,16 @@ color([1,0,0]) text(name, size=1);\n");
   fprintf (stdout, "radius = %g;\n", base_radius);
   
   // base
-  fprintf (stdout, "translate([-10, -15, -2]) color(\"green\") \
+  fprintf (stdout, "translate([-10, -15, -.5]) color(\"green\") \
 	   cube([30, 30, .4]);\n");
 
   // pcb
-  fprintf (stdout, "translate([8.5, -15, -1.3]) color(\"blue\")		\
+  fprintf (stdout, "translate([8.5, -15, 0.2]) color(\"blue\")		\
 	   cube([11.5, 14.6, .2]);\n");
   fprintf (stdout, "linear_extrude(.1) translate([8, -15, 5.14]) color([1,0,0]) rotate([0, 0, 90]) {text(\"PCB\", size=1);}\n");
 
   // panel
-  fprintf (stdout, "translate([8.5, -0, 1.2]) color(\"pink\")		\
+  fprintf (stdout, "translate([8.5, -0, 2.5]) color(\"pink\")		\
 	   cube([11.5, 14.6, .2]);\n");
   fprintf (stdout, "linear_extrude(.1) translate([7.5, 11, 0]) color([1,0,0]) rotate([0, 0, 90]) {text(\"Panel\", size=1);}\n");
 
