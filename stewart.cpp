@@ -136,7 +136,7 @@ double leg_length = DEFAULT_LEG_LENGTH;
 #define B3_AI	  0.022
 #define B4_AI	  0.017
 #define B5_AI	  0.006
-#define DEFAULT_BASE_RADIUS	6.0
+#define DEFAULT_BASE_RADIUS	7.5
 double base_radius = DEFAULT_BASE_RADIUS;
 
 
@@ -220,7 +220,7 @@ up_e upi = UP_Y;
 
 class servo {
 public:
-  servo (double x, double y, double sa, double aa, double ai) {
+  servo (double x, double y, double sa, double aa, double ai, double fk) {
     pos.x = x;
     pos.y = y;
     rotation_angle = atan2 (y, x);
@@ -229,6 +229,7 @@ public:
     shaft_vector.y = sin (sa);
     alpha = aa;
     alpha_incr = ai;
+    fake_angle = fk;
   }
   position_s pos;
   double     rotation_angle;
@@ -236,6 +237,7 @@ public:
   vector_s   shaft_vector;
   double     alpha;		// angle of servo arm wrt x axis,
   double     alpha_incr;
+  double     fake_angle;
   glm::mat4  servo_mtx;
 };
 
@@ -1462,28 +1464,75 @@ main(int argc, char **argv)
 #define M_270 (3.0 * M_PI_2)
   servos.push_back (new servo (base_radius * cos (B0_ANGLE),
 			       base_radius * sin (B0_ANGLE),
-			       SA0, M_PI_2, B0_AI));
+			       SA0, M_PI_2, B0_AI, 25.0));
   servos.push_back (new servo (base_radius * cos (B1_ANGLE),
 			       base_radius * sin (B1_ANGLE),
-			       SA1, M_PI_2, B1_AI));
+			       SA1, M_PI_2, B1_AI, -25.0));
   servos.push_back (new servo (base_radius * cos (B2_ANGLE),
 			       base_radius * sin (B2_ANGLE),
-			       SA2, M_PI_2, B2_AI));
+			       SA2, M_PI_2, B2_AI, 25.0));
   servos.push_back (new servo (base_radius * cos (B3_ANGLE),
 			       base_radius * sin (B3_ANGLE),
-			       SA3, M_PI_2, B3_AI));
+			       SA3, M_PI_2, B3_AI, -25.0));
   servos.push_back (new servo (base_radius * cos (B4_ANGLE),
 			       base_radius * sin (B4_ANGLE),
-			       SA4, M_PI_2, B4_AI));
+			       SA4, M_PI_2, B4_AI, 25.0));
   servos.push_back (new servo (base_radius * cos (B5_ANGLE),
 			       base_radius * sin (B5_ANGLE),
-			       SA5, M_PI_2, B5_AI));
+			       SA5, M_PI_2, B5_AI, -25.0));
 #if 0
   for (int i = 0; i < servos.size (); i++) {
     fprintf (stderr, "\n%d %g %g rad %g ang %g\n",
 	     i, servos[i]->pos.x, servos[i]->pos.y,
 	     hypot (servos[i]->pos.x, servos[i]->pos.y),
 	     atan2 (servos[i]->pos.y, servos[i]->pos.x));
+  }
+#endif
+
+  // pcb 146 x 115
+#if 1
+  // servo module
+  fprintf (stdout, "module servo(ang, loc, name) {\n");
+  fprintf (stdout, "  rotate([0, 0, ang]) {\n");
+  fprintf (stdout, "    translate([-4, -1.0, 0]) cube([4.0, 2.0, 4.05]);\n");
+  fprintf (stdout, "    rotate([0,90,0]) translate([-3.5, 0, 0.0]) \
+cylinder(h=3,r=0.5);\n");
+  fprintf (stdout, "    linear_extrude(.1) translate([-2.5, -2.2, 0]) \
+color([1,0,0]) text(loc, size=1);\n");
+  fprintf (stdout, "    linear_extrude(.1) translate([-2.5, 1.3, 0]) \
+color([1,0,0]) text(name, size=1);\n");
+  fprintf (stdout, "  }\n");
+  fprintf (stdout, "}\n");
+  // smoothness
+  fprintf (stdout, "$fn = 32;\n");
+  // anchor radius
+  fprintf (stdout, "radius = %g;\n", base_radius);
+  
+  // base
+  fprintf (stdout, "translate([-10, -15, -2]) color(\"green\") \
+	   cube([30, 30, .4]);\n");
+
+  // pcb
+  fprintf (stdout, "translate([8.5, -15, -1.3]) color(\"blue\")		\
+	   cube([11.5, 14.6, .2]);\n");
+  fprintf (stdout, "linear_extrude(.1) translate([8, -15, 5.14]) color([1,0,0]) rotate([0, 0, 90]) {text(\"PCB\", size=1);}\n");
+
+  // panel
+  fprintf (stdout, "translate([8.5, -0, 1.2]) color(\"pink\")		\
+	   cube([11.5, 14.6, .2]);\n");
+  fprintf (stdout, "linear_extrude(.1) translate([7.5, 11, 0]) color([1,0,0]) rotate([0, 0, 90]) {text(\"Panel\", size=1);}\n");
+
+  //anchors
+  for (int i = 0; i < servos.size (); i++) {
+    char loc[64];
+    char name[64];
+    sprintf (loc, "%.3g, %.3g", servos[i]->pos.x,servos[i]->pos.y);
+    sprintf (name, "Servo %d", i);
+    fprintf (stdout,
+	     "rotate([0, 0, %g]) translate ([radius, 0, 0]) \
+  servo(%g, \"%s\", \"%s\");\n",
+	     R2D (atan2 (servos[i]->pos.y,servos[i]->pos.x)),
+	     servos[i]->fake_angle, loc, name);
   }
 #endif
   
@@ -1502,13 +1551,13 @@ main(int argc, char **argv)
 
   //https://stackoverflow.com/questions/36314690/c-fprintf-with-colors
 
-  {
-  using namespace sps;
-  std::cout << set_color (colors::red)
-	    << set_face (faces::bold)
-	    << set_face (faces::invert)
-	    << "\n            Press h for help            \n\n"
-	    << set_color() << std::endl;
+  if (0) {
+    using namespace sps;
+    std::cout << set_color (colors::red)
+	      << set_face (faces::bold)
+	      << set_face (faces::invert)
+	      << "\n            Press h for help            \n\n"
+	      << set_color() << std::endl;
   }
   
   glutMainLoop ();
