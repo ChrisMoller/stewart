@@ -9,11 +9,11 @@ module servo(ang, loc, name) {
 }
 $fn = 32;
 radius = 7.5;
-translate([-10, -15, -.5]) color("green") 	   cube([30, 30, .4]);
-translate([8.5, -15, 0.2]) color("blue")			   cube([11.5, 14.6, .2]);
-linear_extrude(.1) translate([8, -15, 5.14]) color([1,0,0]) rotate([0, 0, 90]) {text("PCB", size=1);}
-translate([8.5, -0, 2.5]) color("pink")			   cube([11.5, 14.6, .2]);
-linear_extrude(.1) translate([7.5, 11, 0]) color([1,0,0]) rotate([0, 0, 90]) {text("Panel", size=1);}
+translate([-10, -15, -.5]) color("green") 	   cube([40, 30, .4]);
+translate([18.5, -15, 0.2]) color("blue")			   cube([11.5, 14.6, .2]);
+linear_extrude(.1) translate([18, -15, 5.14]) color([1,0,0]) rotate([0, 0, 90]) {text("PCB", size=1);}
+translate([18.5, -0, 2.5]) color("pink")			   cube([11.5, 14.6, .2]);
+linear_extrude(.1) translate([17.5, 11, 0]) color([1,0,0]) rotate([0, 0, 90]) {text("Panel", size=1);}
 rotate([0, 0, 154.217]) translate ([radius, 0, 0])   servo(25, "-6.75, 3.26", "Servo 0");
 rotate([0, 0, -154.217]) translate ([radius, 0, 0])   servo(-25, "-6.75, -3.26", "Servo 1");
 rotate([0, 0, -85.7832]) translate ([radius, 0, 0])   servo(25, "0.551, -7.48", "Servo 2");
