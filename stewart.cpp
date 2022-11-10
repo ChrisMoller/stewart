@@ -1490,7 +1490,7 @@ main(int argc, char **argv)
 #endif
 
   // pcb   14.6 x 11.5
-  // panel 14.6 x 11.5
+  // panel 14.6 x 18.5
 #if 1
   // servo module
   fprintf (stdout, "module servo(ang, loc, name) {\n");
