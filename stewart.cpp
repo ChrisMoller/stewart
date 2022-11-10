@@ -1515,7 +1515,7 @@ color([1,0,0]) text(name, size=1);\n");
 
   // pcb
   fprintf (stdout, "translate([18.5, -15, 0.2]) color(\"blue\")		\
-	   cube([11.5, 14.6, .2]);\n");
+	   cube([21.5, 14.6, .2]);\n");
   fprintf (stdout, "linear_extrude(.1) translate([18, -15, 5.14]) color([1,0,0]) rotate([0, 0, 90]) {text(\"PCB\", size=1);}\n");
 
   // panel
