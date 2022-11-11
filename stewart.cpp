@@ -1491,19 +1491,33 @@ main(int argc, char **argv)
 
   // pcb   14.6 x 11.5
   // panel 14.6 x 18.5
+
+
 #if 1
   // servo module
   fprintf (stdout, "module servo(ang, loc, name) {\n");
   fprintf (stdout, "  rotate([0, 0, ang]) {\n");
   fprintf (stdout, "    translate([-4, -1.0, 0]) cube([4.0, 2.0, 4.05]);\n");
-  fprintf (stdout, "    rotate([0,90,0]) translate([-3.5, 0, 0.0]) \
-cylinder(h=3,r=0.5);\n");
-  fprintf (stdout, "    linear_extrude(.1) translate([-2.5, -2.2, 0]) \
-color([1,0,0]) text(loc, size=1);\n");
-  fprintf (stdout, "    linear_extrude(.1) translate([-2.5, 1.3, 0]) \
-color([1,0,0]) text(name, size=1);\n");
+  fprintf (stdout, "    rotate([0,90,0]) translate([-3.5, 0, 0.0]) \n\
+    cylinder(h=3,r=0.5);\n");
+  fprintf (stdout, "    linear_extrude(.1) translate([-2.5, -2.2, 0]) \n\
+    color([1,0,0]) text(loc, size=1);\n");
+  fprintf (stdout, "    linear_extrude(.1) translate([-2.5, 1.3, 0]) \n\
+    color([1,0,0]) text(name, size=1);\n");
   fprintf (stdout, "  }\n");
   fprintf (stdout, "}\n");
+
+  fprintf (stdout, "module panel() {\n");
+  fprintf (stdout, "  translate([0, 0, 2.5]) color(\"pink\") \n\
+    cube([18.5, 14.6, .2]);\n");
+  fprintf (stdout, "    linear_extrude(.1) translate([0, 11, 0]) \n\
+     color([1,0,0]) rotate([0, 0, 90]) {text(\"Panel\", size=1);}\n");
+  fprintf (stdout, "    translate([0.5, 0.5, 0]) cylinder(h=2.5,r=0.1);\n");
+  fprintf (stdout, "    translate([18, 0.5, 0]) cylinder(h=2.5,r=0.1);\n");
+  fprintf (stdout, "    translate([18, 14, 0]) cylinder(h=2.5,r=0.1);\n");
+  fprintf (stdout, "    translate([0.5, 14, 0]) cylinder(h=2.5,r=0.1);\n");
+  fprintf (stdout, "}\n");
+
   // smoothness
   fprintf (stdout, "$fn = 32;\n");
   // anchor radius
@@ -1514,14 +1528,13 @@ color([1,0,0]) text(name, size=1);\n");
 	   cube([40, 30, .4]);\n");
 
   // pcb
-  fprintf (stdout, "translate([18.5, -15, 0.2]) color(\"blue\")		\
-	   cube([21.5, 14.6, .2]);\n");
-  fprintf (stdout, "linear_extrude(.1) translate([18, -15, 5.14]) color([1,0,0]) rotate([0, 0, 90]) {text(\"PCB\", size=1);}\n");
+  fprintf (stdout, "translate([8.5, -15, 0.2]) color(\"blue\") \n\
+    cube([21.5, 14.6, .2]);\n");
+  fprintf (stdout, "linear_extrude(.1) translate([8, -15, 5.14]) \n\
+    color([1,0,0]) rotate([0, 0, 90]) {text(\"PCB\", size=1);}\n");
 
   // panel
-  fprintf (stdout, "translate([18.5, -0, 2.5]) color(\"pink\")		\
-	   cube([11.5, 14.6, .2]);\n");
-  fprintf (stdout, "linear_extrude(.1) translate([17.5, 11, 0]) color([1,0,0]) rotate([0, 0, 90]) {text(\"Panel\", size=1);}\n");
+  fprintf (stdout, "translate ([11, 0, 0]) panel();\n");
 
   //anchors
   for (int i = 0; i < servos.size (); i++) {
