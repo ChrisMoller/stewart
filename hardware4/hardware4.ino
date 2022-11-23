@@ -314,8 +314,6 @@ void loop() {
 	    client.println ("    break;");
 	    client.println ("  }");
 
-	    client.println ("console.log ('rc = ');");
-	    client.println ("console.log (rc);");
 	    client.println ("  window.location.href = rc;");
 	    client.println ("  return false;");
 	    client.println ("}");
@@ -334,10 +332,7 @@ void loop() {
 	    /**** function keyHandler(el) ****/
 
 	    client.println ("function keyHandler(el) {");
-	    client.println ("console.log('kh = ');");
-	    client.println ("console.log(event.keyCode);");
 	    client.println ("  if (event.keyCode=='13'){");
-	    Serial.println ("abt to rel");
 	    client.println ("    reloadApp (el);");
 	    client.println ("    return false;");
 	    client.println ("  }");
