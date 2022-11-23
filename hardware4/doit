@@ -1,0 +1,4 @@
+#!/bin/sh
+make
+arduino-cli monitor -p /dev/ttyACM0
+

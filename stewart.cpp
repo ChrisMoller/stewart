@@ -81,49 +81,6 @@ double leg_length = DEFAULT_LEG_LENGTH;
 
 #define PLATFORM_HEIGHT	 20.0
 
-#if 0				// in 30x30 cm base
-#define B0x -6.5
-#define B0y  6.1
-#define B1x -8.3
-#define B1y  3.0
-#define B2x -2.8
-#define B2y -8.5
-#define B3x  3.8 
-#define B3y -8.5
-#define B4x  8.3
-#define B4y  3.0
-#define B5x  6.5
-#define B5y  6.1
-#endif
-#if 0				// current
-#define B0x -5.40268
-#define B0y  2.60979
-#define B1x -5.40268
-#define B1y -2.60979
-#define B2x  0.441194
-#define B2y -5.98376
-#define B3x  4.96149
-#define B3y -3.37396
-#define B4x  4.96149
-#define B4y  3.37396
-#define B5x  0.441194
-#define B5y  5.98376
-#endif
-#if 0				// old
-#define B0x	-5.2		// cm coords wrt world origin
-#define B0y	 2.5
-#define B1x	-5.2
-#define B1y	-2.5
-#define B2x	 0.5
-#define B2y	-5.8
-#define B3x	 4.8
-#define B3y	-3.3
-#define B4x	 4.8
-#define B4y	 3.3
-#define B5x	 0.5
-#define B5y	 5.8
-#endif
-
 #define B0_ANGLE  2.69159
 #define B1_ANGLE -2.69159
 #define B2_ANGLE -1.4972
@@ -141,52 +98,12 @@ double base_radius = DEFAULT_BASE_RADIUS;
 
 
 
-#if 1
 #define SA0	M_PI_2			// radians shaft angle
 #define SA1	M_PI_2
 #define SA2	(-M_PI / 6.0)
 #define SA3	(-M_PI / 6.0)
 #define SA4	(7.0 * M_PI / 6.0)
 #define SA5	(7.0 * M_PI / 6.0)
-#else
-#define SA0	(-2.0 * M_PI / 6.0)			// radians shaft angle
-#define SA1	(-4.0 * M_PI / 6.0)
-#define SA2	(-2.0 * M_PI / 6.0)
-#define SA3	(-4.0 * M_PI / 6.0)
-#define SA4	(-2.0 * M_PI / 6.0)
-#define SA5	(-4.0 * M_PI / 6.0)
-#endif
-
-#if 0
-#define ARBITRARY_PLATFORM_SCALE	0.3
-#define oP0x	B0x * ARBITRARY_PLATFORM_SCALE	// cm coords wrt platform
-#define oP0y	B0y * ARBITRARY_PLATFORM_SCALE
-#define oP1x	B1x * ARBITRARY_PLATFORM_SCALE
-#define oP1y	B1y * ARBITRARY_PLATFORM_SCALE
-#define oP2x	B2x * ARBITRARY_PLATFORM_SCALE
-#define oP2y	B2y * ARBITRARY_PLATFORM_SCALE
-#define oP3x	B3x * ARBITRARY_PLATFORM_SCALE
-#define oP3y	B3y * ARBITRARY_PLATFORM_SCALE
-#define oP4x	B4x * ARBITRARY_PLATFORM_SCALE
-#define oP4y	B4y * ARBITRARY_PLATFORM_SCALE
-#define oP5x	B5x * ARBITRARY_PLATFORM_SCALE
-#define oP5y	B5y * ARBITRARY_PLATFORM_SCALE
-#endif
-
-#if 0
-#define P0x -1.430
-#define P0y  0.976
-#define P1x -1.432
-#define P1y -1.000
-#define P2x -0.137
-#define P2y -1.743
-#define P3x  1.577
-#define P3y -0.752
-#define P4x  1.582
-#define P4y  0.740
-#define P5x -0.130
-#define P5y  1.726
-#endif
 
 #define P0_ANGLE  2.54
 #define P1_ANGLE -2.54
@@ -383,23 +300,42 @@ namespace sps {
 #define READOUT_PLATFORM_X	-0.9f
 #define READOUT_PLATFORM_Y	 0.9f
 
+#define DEFAULT_SCAD_BASE_NAME "stewart"
+
 int width  = DEFAULT_WIDTH;
 int height = DEFAULT_HEIGHT;
+int mouse_mod    = 0;
+int mouse_state  = 0;
+int mouse_button = 0;
+int mouse_x      = 0;
+int mouse_y      = 0;
 
 pid_t ffmpeg_pid = -1;
 char* filename = NULL;
+char* scadbase = NULL;
 FILE* ffmpeg = NULL;
 
 std::vector<servo *> servos;
 _platform *platform;
 
-spherical location = spherical (16.9, D2R (0.0), D2R (45.0));
-spherical centre   = spherical (0.0, 12.8, 0.0);
-
+#define DEFAULT_LOCATION_DISTANCE 16.9
+#define DEFAULT_LOCATION_THETA     0.0
+#define DEFAULT_LOCATION_PHI      45.0
+spherical location = spherical (DEFAULT_LOCATION_DISTANCE,
+				D2R (DEFAULT_LOCATION_THETA),
+				D2R (DEFAULT_LOCATION_PHI));
+#define DEFAULT_CENTRE_DISTANCE   0.0
+#define DEFAULT_CENTRE_THETA     12.8
+#define DEFAULT_CENTRE_PHI        0.0
+spherical centre   = spherical (DEFAULT_CENTRE_DISTANCE,
+				D2R (DEFAULT_CENTRE_THETA),
+				D2R (DEFAULT_CENTRE_PHI));
 
 bool one_shot  = false;
 bool do_motion = true;
 bool demo_mode = false;
+bool launch_os = false;
+pid_t os_proc  = -1;
 
 double h0;				// base height based on geometry
 
@@ -507,7 +443,13 @@ enditall (int sig)
 {
   if (ffmpeg && ffmpeg_pid >= 0) pclose2 (ffmpeg,  ffmpeg_pid);
   ffmpeg = NULL;
+  if (os_proc > 0) {
+    int rc = kill (os_proc, SIGKILL);
+    if (rc == -1)
+      perror ("kill");
+  }
   write (fileno (stdout), "\n", 1);
+  glutLeaveMainLoop ();
   exit (0);
 }
 
@@ -1083,11 +1025,11 @@ specialkeys (int key, int x, int y)
       showlook = true;
       break;
     case GLUT_KEY_DOWN:
-      centre.y -= 0.1;
+      centre.z -= 0.1;
       showlook = true;
       break;
     case GLUT_KEY_UP:
-      centre.y += 0.1;
+      centre.z += 0.1;
       showlook = true;
       break;
     case GLUT_KEY_HOME:
@@ -1179,16 +1121,147 @@ show_help ()
   fprintf (stdout, "\talt-a	decrease arm length\n");
   fprintf (stdout, "\talt-A	increase arm length\n");
   fprintf (stdout, "\talt-d	display anchor points\n");
+  fprintf (stdout, "\talt-s	dump scad files\n");
+}
+
+static void
+dump_scad ()
+{
+  char *fn = NULL;
+  char *main_fn = NULL;
+  asprintf (&main_fn, "%s.scad", scadbase);
+  FILE *fp = fopen (main_fn, "w");
+
+  if (fp) {
+    fprintf (fp, "\n//servo module\n");
+      // servo module
+    fprintf (fp, "module servo(ang, loc, name) {\n");
+    fprintf (fp, "  rotate([0, 0, ang]) {\n");
+    fprintf (fp, "    translate([-4, -1.0, 0]) cube([4.0, 2.0, 4.05]);\n");
+    fprintf (fp, "    rotate([0,90,0]) translate([-3.5, 0, 0.0]) \n\
+      cylinder(h=3,r=0.5);\n");
+    fprintf (fp, "    linear_extrude(.1) translate([-2.5, -2.2, 0]) \n\
+      color([1,0,0]) text(loc, size=1);\n");
+    fprintf (fp, "    linear_extrude(.1) translate([-2.5, 1.3, 0]) \n\
+      color([1,0,0]) text(name, size=1);\n");
+    fprintf (fp, "  }\n");
+    fprintf (fp, "}\n");
+
+    fprintf (fp, "include <%s_panel_module.scad>\n",scadbase); 
+
+    fprintf (fp, "\n//parameters\n");
+    // smoothness
+    fprintf (fp, "$fn = 32;\n");
+    // anchor radius
+    fprintf (fp, "radius = %g;\n", base_radius);
+  
+    fprintf (fp, "\n//base\n");
+    fprintf (fp, "translate([-10, -15, -.5]) color(\"green\") \
+	   cube([40, 30, .4]);\n");
+
+    fprintf (fp, "\n//PCB\n");
+    fprintf (fp, "translate([18.5, -15, 0.2]) color(\"blue\") \n\
+    cube([11.5, 14.6, .2]);\n");
+    fprintf (fp, "translate([18, -15, 0.5]) linear_extrude(.1) \n\
+    color([1,0,0]) rotate([0, 0, 90]) {text(\"PCB\", size=1);}\n");
+
+    fprintf (fp, "\n//panel\n");
+    fprintf (fp, "translate ([12.5, 0, 0.]) panel(2.54,1);\n");
+
+    fprintf (fp, "\n//anchors\n");
+    for (int i = 0; i < servos.size (); i++) {
+      char loc[64];
+      char name[64];
+      sprintf (loc, "%.3g, %.3g", servos[i]->pos.x,servos[i]->pos.y);
+      sprintf (name, "Servo %d", i);
+      fprintf (fp,
+	       "rotate([0, 0, %g]) translate ([radius, 0, 0]) \n\
+  servo(%g, \"%s\", \"%s\");\n",
+	       R2D (atan2 (servos[i]->pos.y,servos[i]->pos.x)),
+	       servos[i]->fake_angle, loc, name);
+    }
+    fclose (fp);
+    free (fn);
+    fn = NULL;
+  }
+  
+  asprintf (&fn, "%s_panel_module.scad", scadbase);
+  fp = fopen (fn, "w");
+  if (fp) {
+    fprintf (fp, "\n//panel module\n");
+    fprintf (fp, "module panel(hgt, legs) {\n");
+    fprintf (fp, "  difference() {\n");
+    fprintf (fp, "    translate([0, 0, hgt]) color(\"pink\") \n\
+        cube([17, 14.6, .2]);\n");
+    fprintf (fp, "    translate([5.8, 4, 0]) cylinder(h=4, r=2);\n");
+    fprintf (fp, "    translate([5.8, 10.6, 0]) cylinder(h=4, r=2);\n");
+    fprintf (fp, "    translate([11.8, 2.3, 0]) cylinder(h=4, r=1.2);\n");
+    fprintf (fp, "    translate([11.8, 5.3, 0]) cylinder(h=4, r=1.2);\n");
+    fprintf (fp, "    //translate([11.8, 8.3, 0]) cylinder(h=4, r=1.2);\n");
+    fprintf (fp, "    translate([11.8, 12.3, 0]) cylinder(h=4, r=1.2);\n");
+    fprintf (fp, "    translate([0.5, 0.5, 0]) cylinder(h=0.3,r=0.2);\n");
+    fprintf (fp, "    translate([16.5, 0.5, 0]) cylinder(h=0.3,r=0.2);\n");
+    fprintf (fp, "    translate([16.5, 14, 0]) cylinder(h=0.3,r=0.2);\n");
+    fprintf (fp, "    translate([0.5, 14, 0]) cylinder(h=0.3,r=0.2);\n");
+    fprintf (fp, "  }\n");
+    fprintf (fp, "if (legs == 1) {\n");
+    fprintf (fp, "   translate([0, 11, 3]) linear_extrude(.1)  \n\
+       color([1,0,0]) rotate([0, 0, 90]) {text(\"Panel\", size=1);}\n");
+    fprintf (fp, "   translate([0.5, 0.5, 0]) cylinder(h=hgt+0.25,r=0.18);\n");
+    fprintf (fp, "   translate([16.5, 0.5, 0]) cylinder(h=hgt+0.25,r=0.18);\n");
+    fprintf (fp, "   translate([16.5, 14, 0]) cylinder(h=hgt+0.25,r=0.18);\n");
+    fprintf (fp, "   translate([0.5, 14, 0]) cylinder(h=hgt+0.25,r=0.18);\n");
+    fprintf (fp, "  }\n");
+    fprintf (fp, "}\n");
+    fclose (fp);
+    free (fn);
+    fn = NULL;
+  }
+  
+  asprintf (&fn, "%s_panel.scad", scadbase);
+  fp = fopen (fn, "w");
+  if (fp) {
+    fprintf (fp, "$fn = 64;\n");
+    fprintf (fp, "include <%s_panel_module.scad>\n",scadbase); 
+    fprintf (fp, "panel(0.0005, 0);\n");
+    fclose (fp);
+    free (fn);
+    fn = NULL;
+  }
+
+  if (launch_os) {
+    if (os_proc < 0) {
+      os_proc = fork ();
+      if (os_proc == 0) {		// child
+	char *argv[5];
+	argv[0] = strdup ("openscad");
+	argv[1] = strdup ("--autocenter");
+	argv[2] = strdup ("--viewall");
+	argv[3] = strdup (main_fn);
+	argv[4] = NULL;
+	int rc = execvp ("openscad", argv);
+	if (rc == -1)
+	  perror ("exec");
+      }
+      else if (os_proc == -1) launch_os = false;
+    }
+  }
+  if (main_fn) free (main_fn);
+  main_fn = NULL;
 }
 
 static void
 keyboard (unsigned char key, int x, int y)
 {
   if (key == 27 || key == 'q') {
+#if 1
+    enditall (0);
+#else
     if (ffmpeg && ffmpeg_pid >= 0) pclose2 (ffmpeg,  ffmpeg_pid);
     ffmpeg = NULL;
     write (fileno (stdout), "\n", 1);
     glutLeaveMainLoop ();
+#endif
   }
   
   int mod = glutGetModifiers ();
@@ -1279,6 +1352,7 @@ keyboard (unsigned char key, int x, int y)
     case 'L': leg_length += 0.1; set_h0 (); break;
     case 'a': arm_length -= 0.1; set_h0 (); break;
     case 'A': arm_length += 0.1; set_h0 (); break;
+    case 's': dump_scad (); break;
     case 'd':
       fprintf (stdout, "base: (cm)\n");
       for (int i = 0; i < servos.size (); i++) {
@@ -1347,9 +1421,154 @@ keyboard (unsigned char key, int x, int y)
   }
 }
 
+enum {
+  MENU_RESET_CAMERA,
+  MENU_RESET_CENTRE,
+  MENU_RESET_PLATFORM
+};
+
+static void
+main_menu (int item)
+{
+  switch(item) {
+  case MENU_RESET_CAMERA:
+    location.setDistance (DEFAULT_LOCATION_DISTANCE);
+    location.setLongitude (D2R (DEFAULT_LOCATION_THETA));
+    location.setLatitude  (D2R (DEFAULT_LOCATION_PHI));
+  case MENU_RESET_CENTRE:
+    location.setDistance (DEFAULT_CENTRE_DISTANCE);
+    location.setLongitude (D2R (DEFAULT_CENTRE_THETA));
+    location.setLatitude  (D2R (DEFAULT_CENTRE_PHI));
+    break;
+  case MENU_RESET_PLATFORM:
+    platform->rho   = 0.0;
+    platform->phi   = 0.0;
+    platform->theta = 0.0;
+    platform->delta_x = 0.0;
+    platform->delta_y = 0.0;
+    platform->delta_z = 0.0;
+    break;
+  }
+}
+
+static void
+sub_menu (int item)
+{
+  printf ("sub menu: you clicked item %d\n", item);
+}
+
+static void
+sub_sub_menu (int item)
+{
+  printf ("sub sub menu: you clicked item %d\n", item);
+}
+
+static void
+mouse_motion(int x, int y)
+{
+  if (mouse_state == GLUT_DOWN) {
+    double dx = ((double)(x - mouse_x)) / (double)width;
+    double dy = ((double)(mouse_y - y)) / (double)height;
+    if ((mouse_mod & ~GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_CTRL) {
+      if (mouse_mod & GLUT_ACTIVE_SHIFT) {
+	centre.x =  dx * 20.0;
+	centre.z =  dy * 20.0;
+      }
+      else {	// camera lat, long
+	location.incLongitude (D2R (dx * 2.0));
+	location.incLatitude (D2R (dy * 2.0));
+      }
+    }
+    else if ((mouse_mod & ~GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_ALT) {
+      // model characteristics like arm length
+    }
+    else {
+      // move platform
+      if (mouse_mod & GLUT_ACTIVE_SHIFT) {
+	platform->delta_z = dx * 20.0;
+	platform->delta_x = dy * 20.0;
+      }
+      else {
+	platform->phi = D2R (dx * 80.0);
+	platform->rho = D2R (-dy * 80.0);
+      }
+    }
+  }
+}
+
+#if 0
+static void
+mouse_passive_motion(int x, int y)
+{
+  fprintf (stderr, "mpm %d %d %d\n", mod, x, y);
+}
+#endif
+
+static void
+mouse_func (int button, int state, int x, int y)
+{
+  // shift = 1 = GLUT_ACTIVE_SHIFT
+  // ctrl  = 2 = GLUT_ACTIVE_ALT
+  // alt   = 4 = GLUT_ACTIVE_CTRL
+  
+  mouse_mod = glutGetModifiers ();
+
+  // 0 = left    = GLUT_LEFT_BUTTON
+  // 1 = middle  = GLUT_MIDDLE_BUTTON
+  // 2 = right   = GLUT_RIGHT_BUTTON (used for menu)
+  // 3 = roll up
+  // 4 = roll down
+  mouse_button = button;
+
+  // 0 = down = GLUT_DOWN
+  // 1 = up   = GLUT_UP
+  mouse_state  = state;
+  
+  mouse_x      = x;
+  mouse_y      = y;
+
+  enum {
+    WHEEL_FORWARD  = 1,
+    WHEEL_ZERO     = 0,
+    WHEEL_BACKWARD = -1
+  };
+  int wheel_dir =
+    (mouse_button == 3) ? WHEEL_FORWARD :
+    ((mouse_button == 4) ? WHEEL_BACKWARD : WHEEL_ZERO);
+  
+  if (wheel_dir != WHEEL_ZERO) {
+    if ((mouse_mod & ~GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_CTRL) {
+      if (mouse_mod & GLUT_ACTIVE_SHIFT) {
+	fprintf (stderr, "lookat wheel %d\n", wheel_dir);
+      }
+      else {		// camera dist
+	location.incDistance (((double)wheel_dir) * 0.1);
+      }
+    }
+    else if ((mouse_mod & ~GLUT_ACTIVE_SHIFT) == GLUT_ACTIVE_ALT) {
+      // model characteristics like arm length
+      if (mouse_mod & GLUT_ACTIVE_SHIFT) {
+	fprintf (stderr, "model wheel shift %d\n", wheel_dir);
+      }
+      else {
+	fprintf (stderr, "model wheel unshift %d\n", wheel_dir);
+      }
+    }
+    else {
+      if (mouse_mod & GLUT_ACTIVE_SHIFT) {
+	platform->delta_y += ((double)wheel_dir) * 0.08;
+      }
+      else {	// platform pitch
+	platform->theta += ((double)wheel_dir) * 0.08;
+      }
+    }
+  }
+}
+
 int
 main(int argc, char **argv)
 {
+  scadbase = strdup (DEFAULT_SCAD_BASE_NAME);
   {
 #define GET_HELP  1000
     static struct option long_options[] = {
@@ -1359,6 +1578,8 @@ main(int argc, char **argv)
       {"once",		no_argument,       0,  'o' },
       {"demo",		no_argument, 	   0,  'd' },
       {"motion",	no_argument, 	   0,  'm' },
+      {"scad",		optional_argument, 0,  's' },
+      {"view",		no_argument,       0,  'v' },
       {"help",		no_argument, 	   0,   GET_HELP },
       {0, 0, 0, 0 }
     };
@@ -1366,7 +1587,8 @@ main(int argc, char **argv)
     int c = 0;
     int option_index = 0;
     while (c != -1) {
-      c = getopt_long(argc, argv, "h:w:r::odm", long_options, &option_index);
+      c = getopt_long(argc, argv, "h:w:r::odms:v",
+		      long_options, &option_index);
       switch(c) {
       case 'w':
 	if (optarg) width = atoi (optarg);
@@ -1375,7 +1597,12 @@ main(int argc, char **argv)
 	if (optarg) height = atoi (optarg);
 	break;
       case 'r':
+	if (filename) free (filename);
 	filename = strdup (optarg ?: DEFAULT_FILENAME);
+	break;
+      case 's':
+	if (scadbase) free (scadbase);
+	scadbase = strdup (optarg ?: DEFAULT_SCAD_BASE_NAME);
 	break;
       case 'o':
 	one_shot = true;
@@ -1387,6 +1614,9 @@ main(int argc, char **argv)
       case 'm':
 	do_motion = true;
 	break;
+      case 'v':
+	launch_os = true;
+	break;
       case GET_HELP:
 	fprintf (stderr, "\t-w v\n");
 	fprintf (stderr, "\t--width=v\tset window width\n");
@@ -1395,7 +1625,11 @@ main(int argc, char **argv)
 	fprintf (stderr, "\t--height=v\tset window height\n");
 	
 	fprintf (stderr, "\t-r [s]\n");
-	fprintf (stderr, "\t--record=[s]\tset recording and optionall filename\n");
+	fprintf (stderr, "\t--record=[s]\tset recording and optional \
+filename\n");
+	
+	fprintf (stderr, "\t-s [s]\n");
+	fprintf (stderr, "\t--scad=[s]\tset scad optional filename\n");
 	
 	fprintf (stderr, "\t-o\n");
 	fprintf (stderr, "\t--once\tstop after one iteration\n");
@@ -1409,7 +1643,12 @@ main(int argc, char **argv)
     }
   }
 
-  signal (SIGINT, enditall);
+  signal (SIGINT,  enditall);
+  signal (SIGHUP,  enditall);
+  signal (SIGKILL, enditall);
+  signal (SIGQUIT, enditall);
+  signal (SIGSTOP, enditall);
+  signal (SIGTERM, enditall);
   srand48 (time (NULL));
 
   // https://computergraphics.stackexchange.com/questions/5606/opengl-animation-turn-into-mp4-movie
@@ -1488,67 +1727,6 @@ main(int argc, char **argv)
 	     atan2 (servos[i]->pos.y, servos[i]->pos.x));
   }
 #endif
-
-  // pcb   14.6 x 11.5
-  // panel 14.6 x 18.5
-
-
-#if 1
-  // servo module
-  fprintf (stdout, "module servo(ang, loc, name) {\n");
-  fprintf (stdout, "  rotate([0, 0, ang]) {\n");
-  fprintf (stdout, "    translate([-4, -1.0, 0]) cube([4.0, 2.0, 4.05]);\n");
-  fprintf (stdout, "    rotate([0,90,0]) translate([-3.5, 0, 0.0]) \n\
-    cylinder(h=3,r=0.5);\n");
-  fprintf (stdout, "    linear_extrude(.1) translate([-2.5, -2.2, 0]) \n\
-    color([1,0,0]) text(loc, size=1);\n");
-  fprintf (stdout, "    linear_extrude(.1) translate([-2.5, 1.3, 0]) \n\
-    color([1,0,0]) text(name, size=1);\n");
-  fprintf (stdout, "  }\n");
-  fprintf (stdout, "}\n");
-
-  fprintf (stdout, "module panel() {\n");
-  fprintf (stdout, "  translate([0, 0, 2.5]) color(\"pink\") \n\
-    cube([18.5, 14.6, .2]);\n");
-  fprintf (stdout, "    linear_extrude(.1) translate([0, 11, 0]) \n\
-     color([1,0,0]) rotate([0, 0, 90]) {text(\"Panel\", size=1);}\n");
-  fprintf (stdout, "    translate([0.5, 0.5, 0]) cylinder(h=2.5,r=0.1);\n");
-  fprintf (stdout, "    translate([18, 0.5, 0]) cylinder(h=2.5,r=0.1);\n");
-  fprintf (stdout, "    translate([18, 14, 0]) cylinder(h=2.5,r=0.1);\n");
-  fprintf (stdout, "    translate([0.5, 14, 0]) cylinder(h=2.5,r=0.1);\n");
-  fprintf (stdout, "}\n");
-
-  // smoothness
-  fprintf (stdout, "$fn = 32;\n");
-  // anchor radius
-  fprintf (stdout, "radius = %g;\n", base_radius);
-  
-  // base
-  fprintf (stdout, "translate([-10, -15, -.5]) color(\"green\") \
-	   cube([40, 30, .4]);\n");
-
-  // pcb
-  fprintf (stdout, "translate([8.5, -15, 0.2]) color(\"blue\") \n\
-    cube([21.5, 14.6, .2]);\n");
-  fprintf (stdout, "linear_extrude(.1) translate([8, -15, 5.14]) \n\
-    color([1,0,0]) rotate([0, 0, 90]) {text(\"PCB\", size=1);}\n");
-
-  // panel
-  fprintf (stdout, "translate ([11, 0, 0]) panel();\n");
-
-  //anchors
-  for (int i = 0; i < servos.size (); i++) {
-    char loc[64];
-    char name[64];
-    sprintf (loc, "%.3g, %.3g", servos[i]->pos.x,servos[i]->pos.y);
-    sprintf (name, "Servo %d", i);
-    fprintf (stdout,
-	     "rotate([0, 0, %g]) translate ([radius, 0, 0]) \
-  servo(%g, \"%s\", \"%s\");\n",
-	     R2D (atan2 (servos[i]->pos.y,servos[i]->pos.x)),
-	     servos[i]->fake_angle, loc, name);
-  }
-#endif
   
   glutInit(&argc, argv);
 
@@ -1562,6 +1740,38 @@ main(int argc, char **argv)
   glutKeyboardFunc (keyboard);
   glutSpecialFunc (specialkeys);
   glutIdleFunc (spin);
+  // https://www.opengl.org/resources/libraries/glut/spec3/spec3.html
+  glutMouseFunc (mouse_func);
+  glutMotionFunc (mouse_motion);
+  //  glutPassiveMotionFunc (mouse_passive_motion);
+
+#if 0
+  int mm3 = glutCreateMenu (sub_sub_menu);
+  glutAddMenuEntry ("Seventh", 7);
+  glutAddMenuEntry ("Eighth", 8);
+  glutAddMenuEntry ("Ninth", 9);
+
+  int mm2 = glutCreateMenu (sub_menu);
+  glutAddMenuEntry ("Fourth", 4);
+  glutAddMenuEntry ("Fifth", 5);
+  glutAddMenuEntry ("Sixth", 6);
+  glutAddSubMenu ("Subsubmenu", mm3);
+#endif
+
+  int mm1 = glutCreateMenu (main_menu);
+  glutAddMenuEntry ("Reset camera",   MENU_RESET_CAMERA);
+  glutAddMenuEntry ("Reset centre",   MENU_RESET_CENTRE);
+  glutAddMenuEntry ("Reset platform", MENU_RESET_PLATFORM);
+  glutAddMenuEntry ("Third", 3);
+  //  glutAddSubMenu ("Submenu", mm2);
+  glutAttachMenu (GLUT_RIGHT_BUTTON); /* Attach it to the right button */
+
+  /****
+  glutAddMenuEntry ("Fourth", 4);
+  glutAddMenuEntry ("Fifth", 5);
+  glutAddMenuEntry ("Sixth", 6);
+  ***/
+
 
   //https://stackoverflow.com/questions/36314690/c-fprintf-with-colors
 

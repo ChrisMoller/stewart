@@ -1,3 +1,8 @@
 *.o
 stewart
 stewart.zip
+build/
+*~
+*#
+*.bin
+*.hex
