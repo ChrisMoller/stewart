@@ -25,6 +25,10 @@ double jroll  = 0.0;
 double jpitch = 0.0;
 double jyaw   = 0.0;
 
+double onset    = 0.0;
+double relax    = 0.0;
+double interval = 0.0;
+
 void setup() {
 
   // check for the WiFi module:
@@ -93,85 +97,6 @@ parseString(double &val, String currentLine, String tgt, int &startPos)
   }
 }
 
-#if 0
-int
-initFields (searchParams)
-{
-  String holder;
-
-  holder = String ("pdx = ") + String (pdx, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('pdx'))");
-  client.println ("    pdx = searchParams.get('pdx');");
-  client.println ("document.getElementById('pdx').value = pdx;");
-	    
-  holder = String ("pdy = ") + String (pdy, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('pdy'))");
-  client.println ("    pdy = searchParams.get('pdy');");
-  client.println ("document.getElementById('pdy').value = pdy;");
-	    
-  holder = String ("pdz = ") + String (pdz, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('pdz'))");
-  client.println ("    pdz = searchParams.get('pdz');");
-  client.println ("document.getElementById('pdz').value = pdz;");
-	    
-  holder = String ("proll = ") + String (proll, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('proll'))");
-  client.println ("    proll = searchParams.get('proll');");
-  client.println ("document.getElementById('proll').value = proll;");
-	    
-  holder = String ("ppitch = ") + String (ppitch, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('ppitch'))");
-  client.println ("    ppitch = searchParams.get('ppitch');");
-  client.println ("document.getElementById('ppitch').value = ppitch;");
-	    
-  holder = String ("pyaw = ") + String (pyaw, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('pyaw'))");
-  client.println ("    pyaw = searchParams.get('pyaw');");
-  client.println ("document.getElementById('pyaw').value = pyaw;");
-
-  holder = String ("jdx = ") + String (jdx, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jdx'))");
-  client.println ("    jdx = searchParams.get('jdx');");
-  client.println ("document.getElementById('jdx').value = jdx;");
-  
-  holder = String ("jdy = ") + String (jdy, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jdy'))");
-  client.println ("    jdy = searchParams.get('jdy');");
-  client.println ("document.getElementById('jdy').value = jdy;");
-	    
-  holder = String ("jdz = ") + String (jdz, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jdz'))");
-  client.println ("    jdz = searchParams.get('jdz');");
-  client.println ("document.getElementById('jdz').value = jdz;");
-	    
-  holder = String ("jroll = ") + String (jroll, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jroll'))");
-  client.println ("    jroll = searchParams.get('jroll');");
-  client.println ("document.getElementById('jroll').value = jroll;");
-	    
-  holder = String ("jpitch = ") + String (jpitch, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jpitch'))");
-  client.println ("    jpitch = searchParams.get('jpitch');");
-  client.println ("document.getElementById('jpitch').value = jpitch;");
-	    
-  holder = String ("jyaw = ") + String (jyaw, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jyaw'))");
-  client.println ("    jyaw = searchParams.get('jyaw');");
-  client.println ("document.getElementById('jyaw').value = jyaw;");
-}
-#endif
               
 void loop() {
   WiFiClient client = server.available();   // listen for incoming clients
@@ -190,22 +115,29 @@ void loop() {
             client.println();
 
 	    client.println("<style>");
+
+	    client.println("th, td {");
+	    client.println("  padding-top: 0px;");
+            client.println("  padding-bottom: 0px;");
+            client.println("  padding-left: 10px;");
+            client.println("  padding-right: 0px;");
+            client.println("}");
+	    
 	    client.println("div {");
-	    client.println("width: 720px;");
+	    client.println("width: 820px;");
 	    client.println("background-color: lightgrey;");
 	    client.println("border: 15px lightgrey;");
 	    client.println("padding: 15px;");
 	    client.println("margin: 20px;");
 	    client.println("}");
+	    
 	    client.println("</style>");
 	    
 	    client.println ("<script>");
 	    client.println ("window.onload = function () {");
 	    client.println ("  let srch = window.location.search;");
 	    client.println ("  const searchParams = new URLSearchParams(srch);");
-#if 0
-	    initFields (searchParams);
-#else
+
 {
   String holder;
 
@@ -280,8 +212,26 @@ void loop() {
   client.println ("if (searchParams.has('jyaw'))");
   client.println ("    jyaw = searchParams.get('jyaw');");
   client.println ("document.getElementById('jyaw').value = jyaw;");
+	    
+  holder = String ("onset = ") + String (onset, 2);
+  client.println (holder);
+  client.println ("if (searchParams.has('onset'))");
+  client.println ("    onset = searchParams.get('onset');");
+  client.println ("document.getElementById('onset').value = onset;");
+	    
+  holder = String ("relax = ") + String (relax, 2);
+  client.println (holder);
+  client.println ("if (searchParams.has('relax'))");
+  client.println ("    relax = searchParams.get('relax');");
+  client.println ("document.getElementById('relax').value = relax;");
+	    
+  holder = String ("interval = ") + String (interval, 2);
+  client.println (holder);
+  client.println ("if (searchParams.has('interval'))");
+  client.println ("    interval = searchParams.get('interval');");
+  client.println ("document.getElementById('interval').value = interval;");
 }
-#endif
+
 	    client.println ("}");
 	    client.println ("</script>");
 
@@ -291,6 +241,8 @@ void loop() {
 	    /**** function reloadApp(el) ****/
 	    
 	    client.println ("function reloadApp(el) {");
+	    client.println ("console.log(\"reload app\");");
+	    client.println ("console.log(el.id)");
 	    client.println (" let rc;");
 	    client.println ("  switch (el.id) {");
 	    client.println ("  case 'position':");
@@ -303,7 +255,7 @@ void loop() {
     + '&pyaw='   + el.pyaw.value;");
 	    client.println ("    break;");
 
-	    client.println ("  default:");
+	    client.println ("  case 'jitter':");
 	    client.println ( "   rc = window.location.origin \
     + '?jdx='    + el.jdx.value \
     + '&jdy='    + el.jdy.value \
@@ -312,7 +264,15 @@ void loop() {
     + '&jpitch=' + el.jpitch.value \
     + '&jyaw='   + el.jyaw.value;");
 	    client.println ("    break;");
-	    client.println ("  }");
+
+	    client.println ("  default:");	// time
+	    client.println ( "   rc = window.location.origin \
+    + '?onset='    + el.onset.value \
+    + '&relax='    + el.relax.value \
+    + '&interval=' + el.interval.value;");
+	    client.println ("    break;");
+
+	    client.println ("  }");		// end switch
 
 	    client.println ("  window.location.href = rc;");
 	    client.println ("  return false;");
@@ -358,33 +318,92 @@ void loop() {
             onchange=\"createURL(this);\"			\
             onkeypress=\"return keyHandler(this);\"            \
             >");
-	    
-	    client.print ("<label for=\"pdx\">(cm) dx </label>");
-	    client.print ("<input type=\"number\" id=\"pdx\" step=\"0.1\">  ");
-	    
-	    client.print ("<label for=\"pdy\">dy </label>");
-	    client.print ("<input type=\"number\" id=\"pdy\" step=\"0.1\">  ");
-    
-	    client.print ("<label for=\"pdz\">dz </label>");
-	    client.print ("<input type=\"number\" id=\"pdz\" step=\"0.1\"><br>");
 
-	    client.print ("<br>");
-    
-	    client.print ("<label for=\"proll\">(deg) roll </label>");
-	    client.print ("<input type=\"number\" id=\"proll\" step=\"1.0\">");
-    
-	    client.print ("<label for=\"ppitch\">pitch </label>");
-	    client.print ("<input type=\"number\" id=\"ppitch\" step=\"1.0\">");
-    
-	    client.print ("<label for=\"pyaw\">yaw </label>");
-	    client.print ("<input type=\"number\" id=\"pyaw\" step=\"1.0\"><br>");
+	    client.println ("<table>");
 
-	    client.print ("<br>");
+	    client.println ("  <tr>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+            client.print ("(cm)");
+            client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"pdx\">dx</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"pdx\" step=\"0.1\" \
+form=\"position\">");
+	    client.println ("    </td>");
 	    
-	    client.print ("<input type=\"submit\" value=\"Submit\"><br>");
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"pdy\">dy</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"pdy\" step=\"0.1\" \
+form=\"position\">");
+	    client.println ("    </td>");
+    
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"pdz\">dz</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"pdz\" step=\"0.1\" \
+form=\"position\">");
+	    client.println ("    </td>");
+
+	    client.println ("  </tr>");
+
+	    client.println ("  <tr>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+            client.print ("(deg)");
+            client.println ("    </td>");
 	    
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"proll\">roll</label>");
+            client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"proll\" step=\"1.0\" \
+form=\"position\">");
+	    client.println ("    </td>");
+    
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"ppitch\">pitch</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"ppitch\" step=\"1.0\" \
+form=\"position\">");
+	    client.println ("    </td>");
+    
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"pyaw\">yaw</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"pyaw\" step=\"1.0\" \
+form=\"position\">");
+	    client.println ("    </td>");
+	    
+	    client.println ("  </tr>");
+
+	    client.println ("  <tr>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"submit\" value=\"Submit\">");
+	    client.println ("    </td>");
+
+	    client.println ("  </tr>");
+
+	    client.println ("</table>");
+
 	    client.print("</form>");
-	    client.println ("</div>");
+
+	    client.println ("</div>");		// end position form
 	    
 
 
@@ -398,34 +417,155 @@ void loop() {
             onkeypress=\"return keyHandler(this);\"            \
             >");
 	    
-	    client.print ("<label for=\"jdx\">(cm) dx </label>");
-	    client.print ("<input type=\"number\" id=\"jdx\" step=\"0.1\">  ");
-	    
-	    client.print ("<label for=\"jdy\">dy </label>");
-	    client.print ("<input type=\"number\" id=\"jdy\" step=\"0.1\">  ");
-    
-	    client.print ("<label for=\"jdz\">dz </label>");
-	    client.print ("<input type=\"number\" id=\"jdz\" step=\"0.1\"><br>");
+	    client.println ("<table>");
 
-	    client.print ("<br>");
+	    client.println ("  <tr>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+            client.print ("(cm)");
+            client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"jdx\">dx</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"jdx\" step=\"0.1\" \
+form=\"jitter\">");
+	    client.println ("    </td>");
+	    
+	    client.println ("    <td style=\"text-align:right\" \
+form=\"jitter\">");
+	    client.print ("<label for=\"jdy\">dy</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"jdy\" step=\"0.1\" \
+form=\"jitter\">");
+	    client.println ("    </td>");
     
-	    client.print ("<label for=\"jroll\">(deg) roll </label>");
-	    client.print ("<input type=\"number\" id=\"jroll\" step=\"1.0\">");
-    
-	    client.print ("<label for=\"jpitch\">pitch </label>");
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"jdz\">dz</label>");
+            client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"jdz\" step=\"0.1\" \
+form=\"jitter\">");
+	    client.println ("    </td>");
+
+	    client.println ("  </tr>");
+
+	    client.println ("  <tr>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+            client.print ("(deg)");
+            client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"jroll\">roll</label>");
+            client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"jroll\" step=\"1.0\" \
+form=\"jitter\">");
+            client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"jpitch\">pitch</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
 	    client.print ("<input type=\"number\" id=\"jpitch\" step=\"1.0\">");
+	    client.println ("    </td>");
     
-	    client.print ("<label for=\"jyaw\">yaw </label>");
-	    client.print ("<input type=\"number\" id=\"jyaw\" step=\"1.0\"><br>");
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"jyaw\">yaw</label>");
+	    client.println ("    </td>");
 
-	    client.print ("<br>");
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"jyaw\" step=\"1.0\" \
+form=\"jitter\">");
+	    client.println ("    </td>");
 	    
-	    client.print ("<input type=\"submit\" value=\"Submit\"><br>");
+	    client.println ("  </tr>");
+
+	    client.println ("  <tr>");
 	    
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"submit\" value=\"Submit\">");
+	    client.println ("    </td>");
+
+	    client.println ("  </tr>");
+
+	    client.println ("</table>");
+	 
 	    client.print("</form>");
-	    client.println ("</div>");
+
+	    client.println ("</div>");		// end jitter form
+
+
+
+	    /**** time form ****/
+
+	    client.println ("<div>");
+	    client.println ("<h2>Time</h2>");
+	    
+	    client.print ("<form id=\"time\" method=\"get\" \
+            onchange=\"createURL(this);\"			\
+            onkeypress=\"return keyHandler(this);\"            \
+            >");
+	    
+	    client.println ("<table>");
+
+	    client.println ("  <tr>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+            client.print ("(secs)");
+            client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"onset\">onset</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"onset\" step=\"0.1\" \
+form=\"time\">");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"relax\">relax</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"relax\" step=\"0.1\" \
+form=\"time\">");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<label for=\"interval\">interval</label>");
+	    client.println ("    </td>");
+
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"number\" id=\"interval\" step=\"0.1\" \
+form=\"time\">");
+	    client.println ("    </td>");
+
+	    client.println ("  </tr>");
+
+	    client.println ("  <tr>");
+	    client.println ("    <td style=\"text-align:right\">");
+	    client.print ("<input type=\"submit\" value=\"Submit\">");
+	    client.println ("    </td>");
+
+	    client.println ("  </tr>");
+	    
+	    client.println ("</table>");
+
+	    client.print("</form>");
+
+	    client.println ("</div>");		// end time form
+
     
-            client.println();
             break;
           } else {
             if (currentLine.startsWith("Referer:")) {
