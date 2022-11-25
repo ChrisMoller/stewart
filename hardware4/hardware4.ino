@@ -138,6 +138,17 @@ void loop() {
 	    client.println ("  let srch = window.location.search;");
 	    client.println ("  const searchParams = new URLSearchParams(srch);");
 
+#ifdef DO_SLIDER
+#define initter(v)				\
+  { \
+    String holder = String ( #v " = ") + String (v, 2); \
+    client.println (holder); \
+    client.println ("if (searchParams.has('" #v "'))"); \
+    client.println ("    " #v " = searchParams.get('" #v "');"); \
+    client.println ("document.getElementById('" #v "').value = " #v ";");  \
+    client.println ("document.getElementById('" #v "r').value = " #v ";"); \
+  }
+#else
 #define initter(v)				\
   { \
     String holder = String ( #v " = ") + String (v, 2); \
@@ -146,6 +157,7 @@ void loop() {
     client.println ("    " #v " = searchParams.get('" #v "');"); \
     client.println ("document.getElementById('" #v "').value = " #v ";");  \
   }
+#endif
   
 
 	    initter (pdx);
@@ -251,6 +263,7 @@ void loop() {
 
 	    client.println ("<table>");
 
+#ifdef DO_SLIDER
 	    client.println ("  <tr>");
 	    
 	    client.println ("  <td>");	// empty units
@@ -261,11 +274,12 @@ void loop() {
 	    
 	    client.println ("  <td>");
 	    client.println ("  <input type=\"range\" min=\"-4\" max=\"4\" \
-value=\"50\" class=\"slider\" id=\"myRange\" form=\"position\" value=\"0\">");
+value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
 	    client.println ("  </td>");
 	    client.println ("  </tr>");
 
 	    client.println ("  <tr>");
+#endif
 
 	    client.println ("    <td style=\"text-align:right\">");
             client.print ("(cm)");
