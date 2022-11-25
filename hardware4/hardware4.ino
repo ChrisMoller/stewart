@@ -173,8 +173,6 @@ void loop() {
 	    /**** function reloadApp(el) ****/
 	    
 	    client.println ("function reloadApp(el) {");
-	    client.println ("console.log(\"reload app\");");
-	    client.println ("console.log(el.id)");
 	    client.println (" let rc;");
 	    client.println ("  switch (el.id) {");
 	    client.println ("  case 'position':");
@@ -254,6 +252,20 @@ void loop() {
 	    client.println ("<table>");
 
 	    client.println ("  <tr>");
+	    
+	    client.println ("  <td>");	// empty units
+	    client.println ("  </td>");
+	    
+	    client.println ("  <td>");	// empty id
+	    client.println ("  </td>");
+	    
+	    client.println ("  <td>");
+	    client.println ("  <input type=\"range\" min=\"-4\" max=\"4\" \
+value=\"50\" class=\"slider\" id=\"myRange\" form=\"position\" value=\"0\">");
+	    client.println ("  </td>");
+	    client.println ("  </tr>");
+
+	    client.println ("  <tr>");
 
 	    client.println ("    <td style=\"text-align:right\">");
             client.print ("(cm)");
@@ -324,10 +336,6 @@ form=\"position\">");
 	    client.println ("  </tr>");
 
 	    client.println ("  <tr>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"submit\" value=\"Submit\">");
-	    client.println ("    </td>");
 
 	    client.println ("  </tr>");
 
@@ -422,10 +430,6 @@ form=\"jitter\">");
 	    client.println ("  </tr>");
 
 	    client.println ("  <tr>");
-	    
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"submit\" value=\"Submit\">");
-	    client.println ("    </td>");
 
 	    client.println ("  </tr>");
 
@@ -461,7 +465,7 @@ form=\"jitter\">");
 
 	    client.println ("    <td style=\"text-align:right\">");
 	    client.print ("<input type=\"number\" id=\"onset\" step=\"0.1\" \
-form=\"time\">");
+form=\"time\" min=\"0\">");
 	    client.println ("    </td>");
 
 	    client.println ("    <td style=\"text-align:right\">");
@@ -470,7 +474,7 @@ form=\"time\">");
 
 	    client.println ("    <td style=\"text-align:right\">");
 	    client.print ("<input type=\"number\" id=\"relax\" step=\"0.1\" \
-form=\"time\">");
+form=\"time\" min=\"0\">");
 	    client.println ("    </td>");
 
 	    client.println ("    <td style=\"text-align:right\">");
@@ -479,15 +483,10 @@ form=\"time\">");
 
 	    client.println ("    <td style=\"text-align:right\">");
 	    client.print ("<input type=\"number\" id=\"interval\" step=\"0.1\" \
-form=\"time\">");
+form=\"time\" min=\"0\">");
 	    client.println ("    </td>");
 
 	    client.println ("  </tr>");
-
-	    client.println ("  <tr>");
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"submit\" value=\"Submit\">");
-	    client.println ("    </td>");
 
 	    client.println ("  </tr>");
 	    
