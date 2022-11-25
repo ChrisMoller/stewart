@@ -138,99 +138,31 @@ void loop() {
 	    client.println ("  let srch = window.location.search;");
 	    client.println ("  const searchParams = new URLSearchParams(srch);");
 
-{
-  String holder;
-
-  holder = String ("pdx = ") + String (pdx, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('pdx'))");
-  client.println ("    pdx = searchParams.get('pdx');");
-  client.println ("document.getElementById('pdx').value = pdx;");
-	    
-  holder = String ("pdy = ") + String (pdy, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('pdy'))");
-  client.println ("    pdy = searchParams.get('pdy');");
-  client.println ("document.getElementById('pdy').value = pdy;");
-	    
-  holder = String ("pdz = ") + String (pdz, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('pdz'))");
-  client.println ("    pdz = searchParams.get('pdz');");
-  client.println ("document.getElementById('pdz').value = pdz;");
-	    
-  holder = String ("proll = ") + String (proll, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('proll'))");
-  client.println ("    proll = searchParams.get('proll');");
-  client.println ("document.getElementById('proll').value = proll;");
-	    
-  holder = String ("ppitch = ") + String (ppitch, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('ppitch'))");
-  client.println ("    ppitch = searchParams.get('ppitch');");
-  client.println ("document.getElementById('ppitch').value = ppitch;");
-	    
-  holder = String ("pyaw = ") + String (pyaw, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('pyaw'))");
-  client.println ("    pyaw = searchParams.get('pyaw');");
-  client.println ("document.getElementById('pyaw').value = pyaw;");
-
-  holder = String ("jdx = ") + String (jdx, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jdx'))");
-  client.println ("    jdx = searchParams.get('jdx');");
-  client.println ("document.getElementById('jdx').value = jdx;");
+#define initter(v)				\
+  { \
+    String holder = String ( #v " = ") + String (v, 2); \
+    client.println (holder); \
+    client.println ("if (searchParams.has('" #v "'))"); \
+    client.println ("    " #v " = searchParams.get('" #v "');"); \
+    client.println ("document.getElementById('" #v "').value = " #v ";");  \
+  }
   
-  holder = String ("jdy = ") + String (jdy, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jdy'))");
-  client.println ("    jdy = searchParams.get('jdy');");
-  client.println ("document.getElementById('jdy').value = jdy;");
-	    
-  holder = String ("jdz = ") + String (jdz, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jdz'))");
-  client.println ("    jdz = searchParams.get('jdz');");
-  client.println ("document.getElementById('jdz').value = jdz;");
-	    
-  holder = String ("jroll = ") + String (jroll, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jroll'))");
-  client.println ("    jroll = searchParams.get('jroll');");
-  client.println ("document.getElementById('jroll').value = jroll;");
-	    
-  holder = String ("jpitch = ") + String (jpitch, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jpitch'))");
-  client.println ("    jpitch = searchParams.get('jpitch');");
-  client.println ("document.getElementById('jpitch').value = jpitch;");
-	    
-  holder = String ("jyaw = ") + String (jyaw, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('jyaw'))");
-  client.println ("    jyaw = searchParams.get('jyaw');");
-  client.println ("document.getElementById('jyaw').value = jyaw;");
-	    
-  holder = String ("onset = ") + String (onset, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('onset'))");
-  client.println ("    onset = searchParams.get('onset');");
-  client.println ("document.getElementById('onset').value = onset;");
-	    
-  holder = String ("relax = ") + String (relax, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('relax'))");
-  client.println ("    relax = searchParams.get('relax');");
-  client.println ("document.getElementById('relax').value = relax;");
-	    
-  holder = String ("interval = ") + String (interval, 2);
-  client.println (holder);
-  client.println ("if (searchParams.has('interval'))");
-  client.println ("    interval = searchParams.get('interval');");
-  client.println ("document.getElementById('interval').value = interval;");
-}
+
+	    initter (pdx);
+	    initter (pdy);
+	    initter (pdz);
+	    initter (proll);
+	    initter (ppitch);
+	    initter (pyaw);
+	    initter (jdx);
+	    initter (jdy);
+	    initter (jdz);
+	    initter (jroll);
+	    initter (jpitch);
+	    initter (jyaw);
+	    initter (onset);
+	    initter (relax);
+	    initter (interval);
 
 	    client.println ("}");
 	    client.println ("</script>");
