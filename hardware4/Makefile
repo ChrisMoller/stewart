@@ -11,6 +11,13 @@ compile:
 upload: compile
 	arduino-cli upload -v -p $(PORT) --fqbn $(BOARDNAME) .
 
+ju:
+	arduino-cli upload -v -p $(PORT) --fqbn $(BOARDNAME) \
+--additional-urls upload.php .
+
 
 preproc:
 	arduino-cli compile --preprocess --fqbn $(BOARDNAME) .
+
+jc:
+	arduino-cli compile --fqbn $(BOARDNAME) .

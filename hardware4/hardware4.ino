@@ -55,6 +55,7 @@ void setup() {
   }
 
   server.begin();    // start the web server on port 80
+  
   Serial.println("Connected...");
 
 #ifdef DO_BLINK_TEST
@@ -132,11 +133,25 @@ void loop() {
 	    client.println("}");
 	    
 	    client.println("</style>");
+
+	    client.println("<?php");
+	    client.println("  $uploaddir = \"uploads/\";");
+	    client.println("  $uploadfile = $uploaddir . \
+basename( $_FILES['file']['name']);");
+
+	    client.println("  if(move_uploaded_file($_FILES['file']['tmp_name'], \
+$uploadfile)) {");
+	    client.println("    echo \"The file has been uploaded successfully\";");
+	    client.println("  } else {");
+	    client.println("    echo \"There was an error uploading the file\";");
+	    client.println("  }");
+	    client.println("?>");
 	    
 	    client.println ("<script>");
 	    client.println ("window.onload = function () {");
 	    client.println ("  let srch = window.location.search;");
-	    client.println ("  const searchParams = new URLSearchParams(srch);");
+	    client.println ("  const searchParams = \
+ new URLSearchParams(srch);");
 
 #ifdef DO_SLIDER
 #define initter(v)				\
@@ -181,6 +196,48 @@ void loop() {
 
 
 	    client.println ("<script>");
+
+#if 0
+	    //https://www.geeksforgeeks.org/how-to-make-ajax-call-from-javascript/
+	    client.println ("function ajaxCall() {");
+            client.println ("  $.ajax({");
+  
+            client.println ("    url: 'https://jsonplaceholder.typicode.com/todos/1',");
+            client.println ("    type: \"GET\",");
+  
+            client.println ("    success: function (data) {");
+            client.println ("      var x = JSON.stringify(data);");
+            client.println ("      console.log(x);");
+	    client.println ("    },");
+  
+            client.println ("    error: function (error) {");
+	    client.println ("      console.log(`Error ${error}`);");
+            client.println ("    }");
+            client.println ("  });");
+	    client.println ("}");
+	    client.println ("ajaxCall();");
+#endif
+
+#if 0
+	    client.println ("function displayFullName() {");
+	    client.println ("  var request = new XMLHttpRequest();");
+
+	    client.println ("  var url = '/home/moller/mydata.txt';");
+	    client.println ("  request.open(\"GET\", url, true);");
+
+	    client.println ("  request.onreadystatechange = function() {");
+	    client.println ("  if(this.readyState === 4 && this.status === 200) {");
+            client.println ("    document.getElementById(\"result\").innerHTML \
+= this.responseText;");
+	    client.println ("  console.log(\"resp\");");
+	    client.println ("  console.log(this.responseText);");
+	    client.println ("  }");
+	    client.println ("};");
+
+	    client.println ("request.send();");
+	    client.println ("}");
+#endif
+
 
 	    /**** function reloadApp(el) ****/
 	    
@@ -510,9 +567,82 @@ form=\"time\" min=\"0\">");
 
 	    client.println ("</div>");		// end time form
 
+
+	    /**** editor form ****/
+
+	    client.println ("<form action=\"/form/submit\" method=\"GET\">");
+	    client.println ("  <textarea rows=\"5\" cols=\"60\" \
+name=\"text\" placeholder=\"Enter text\"></textarea>");
+	    client.println ("  <br/>");
+	    client.println ("  <input type=\"submit\" value=\"submit\"/>");
+	    client.println ("</form>");
+
+#if 0
+	    /****** ajax button ********/
+	    client.println ("<div id=\"result\">");
+	    client.println ("  <p>Content of the result DIV box will be \
+replaced by the server response</p>");
+	    client.println ("</div>");
+	    client.println ("<button type=\"button\" \
+onclick=\"displayFullName()\">Display Full Name</button>");
+#endif
+
+	    //#define DO_UPLOAD_FORM
+#ifdef DO_UPLOAD_FORM
+	    /**** upload form ****/
+
+#if 0
+	    client.println ("<form method=\”post\” \
+enctype=\”multipart/form-data\”>");
+	    client.println ("  <div>");
+	    client.println ("    <label for=\”script_uploads\”>\
+ Choose any script to upload (txt, json, xml)</label>");
+	    client.println ("    <input type=\”file\” id=\”script_uploads\” \
+name=\”script_uploads\” accept=”.txt, .json, .xml” multiple>");
+	    client.println ("  </div>");
+	    client.println ("  <div class=\”preview\”>");
+	    client.println ("    <p> No files are currently selected for \
+upload </p>");
+	    client.println ("  </div>");
+	    client.println ("  <div>");
+	    client.println ("    <button> Click here to submit</button>");
+	    client.println ("  </div>");
+	    client.println ("</form>");
+#endif
+	    
+#if 0
+	    client.println ("<form action=\"uoload.php\" \
+enctype=\"multipart/form-data\" method=\"post\">");
+	    client.println ("  <label class=\"custom\" \
+for=\"file\">Upload Your File</label>");
+	    client.println ("  <input id=\"file\" \
+accept=\"text/plain,application/json.application/xml\" \
+name=\"fileToUpload\" type=\"file\" />");
+	    client.println ("  <button class=\"btn btn-success\" \
+name=\"submit\" type=\"submit\"> Upload File </button>");
+	    client.println ("</form>");
+#endif
+	    
+#if 0
+	    client.println ("<form id=\"uploadbanner\" \
+ enctype=\"multipart/form-data\" method=\"post\" action=\"upload.php\">");
+
+	    client.println ("<input id=\"fileupload\" \
+ name=\"mydata\" type=\"file\" />");
+
+	    client.println ("<input type=\"submit\" \
+ value=\"submit\" id=\"submitf\" />");
+	    client.println ("</form>");
+#endif
+#endif		// DO_UPLOAD_FORM
+
+	    /***** end of forms ********/
+
     
+	    client.println ();
             break;
           } else {
+	    Serial.println (currentLine);
             if (currentLine.startsWith("Referer:")) {
               int startPos = 0;
               parseString(jdx,    currentLine, "jdx=",    startPos);
@@ -542,6 +672,9 @@ form=\"time\" min=\"0\">");
 #endif
 	      }
             }
+	    else {
+	      
+	    }
             currentLine = "";
           }
         } else if (c != '\r') {
