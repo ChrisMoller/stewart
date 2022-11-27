@@ -122,96 +122,99 @@ buildPage (WiFiClient client)
   }
 #endif
   
-	    client.println ("<script>");
-	    client.println ("window.onload = function () {");
-	    client.println ("  let srch = window.location.search;");
-	    client.println ("  const searchParams = \
+	    /***** scripts *******/
+
+
+  client.println ("<script>");
+  client.println ("window.onload = function () {");
+  client.println ("  let srch = window.location.search;");
+  client.println ("  const searchParams = \
  new URLSearchParams(srch);");
 
-	    initter (pdx);
-	    initter (pdy);
-	    initter (pdz);
-	    initter (proll);
-	    initter (ppitch);
-	    initter (pyaw);
-	    initter (jdx);
-	    initter (jdy);
-	    initter (jdz);
-	    initter (jroll);
-	    initter (jpitch);
-	    initter (jyaw);
-	    initter (onset);
-	    initter (relax);
-	    initter (interval);
-	    client.println ("}"); // end window.onload function
+  initter (pdx);
+  initter (pdy);
+  initter (pdz);
+  initter (proll);
+  initter (ppitch);
+  initter (pyaw);
+  initter (jdx);
+  initter (jdy);
+  initter (jdz);
+  initter (jroll);
+  initter (jpitch);
+  initter (jyaw);
+  initter (onset);
+  initter (relax);
+  initter (interval);
+  client.println ("}"); // end window.onload function
 
 	    /**** function reloadApp(el) ****/
 	    
-	    client.println ("function reloadApp(el) {");
-	    client.println (" let rc;");
-	    client.println ("  switch (el.id) {");
-	    client.println ("  case 'position':");
-	    client.println ( "   rc = window.location.origin \
+  client.println ("function reloadApp(el) {");
+  client.println (" let rc;");
+  client.println ("  switch (el.id) {");
+  client.println ("  case 'position':");
+  client.println ( "   rc = window.location.origin \
     + '?pdx='    + el.pdx.value \
     + '&pdy='    + el.pdy.value \
     + '&pdz='    + el.pdz.value \
     + '&proll='  + el.proll.value \
     + '&ppitch=' + el.ppitch.value \
     + '&pyaw='   + el.pyaw.value;");
-	    client.println ("    break;");
+  client.println ("    break;");
 
-	    client.println ("  case 'jitter':");
-	    client.println ( "   rc = window.location.origin \
+  client.println ("  case 'jitter':");
+  client.println ( "   rc = window.location.origin \
     + '?jdx='    + el.jdx.value \
     + '&jdy='    + el.jdy.value \
     + '&jdz='    + el.jdz.value \
     + '&jroll='  + el.jroll.value \
     + '&jpitch=' + el.jpitch.value \
     + '&jyaw='   + el.jyaw.value;");
-	    client.println ("    break;");
+  client.println ("    break;");
 
-	    client.println ("  default:");	// time
-	    client.println ( "   rc = window.location.origin \
+  client.println ("  default:");	// time
+  client.println ( "   rc = window.location.origin \
     + '?onset='    + el.onset.value \
     + '&relax='    + el.relax.value \
     + '&interval=' + el.interval.value;");
-	    client.println ("    break;");
+  client.println ("    break;");
 
-	    client.println ("  }");		// end switch
+  client.println ("  }");		// end switch
 
-	    client.println ("  window.location.href = rc;");
-	    client.println ("  return false;");
-	    client.println ("}");
+  client.println ("  window.location.href = rc;");
+  client.println ("  return false;");
+  client.println ("}");
 
 
 
 	    
 	    /**** function createURL(el) ****/
 	    
-	    client.println ("function createURL(el) {");
-	    client.println ("  reloadApp (el);");
-	    client.println ("  return false;");
-	    client.println ("}");
+  client.println ("function createURL(el) {");
+  client.println ("  reloadApp (el);");
+  client.println ("  return false;");
+  client.println ("}");
 
 	    
 	    /**** function keyHandler(el) ****/
 
-	    client.println ("function keyHandler(el) {");
-	    client.println ("  if (event.keyCode=='13'){");
-	    client.println ("    reloadApp (el);");
-	    client.println ("    return false;");
-	    client.println ("  }");
-	    client.println ("  return true;");
-	    client.println ("}");
-
-	    client.println ("</script>");
+  client.println ("function keyHandler(el) {");
+  client.println ("  if (event.keyCode=='13'){");
+  client.println ("    reloadApp (el);");
+  client.println ("    return false;");
+  client.println ("  }");
+  client.println ("  return true;");
+  client.println ("}");
+  
+  client.println ("</script>");
 
 	    /***** end scripts *******/
 
 
 	    /*** begin page ****/
 	    
-	    client.println ("<h1>Stewart</h2>");
+  client.println ("<h1>Stewart</h2>");
 	    
 	    
 	    /****  forms ****/
@@ -234,216 +237,147 @@ buildPage (WiFiClient client)
 
 	    /**** position form ****/
 
-	    client.println ("<div>");
-	    client.println ("<h2>Position</h2>");
+  client.println ("<div>");			// start position form
+  client.println ("<h2>Position</h2>");
 
-	    client.print ("<form id=\"position\" method=\"get\" \
-            onchange=\"createURL(this);\"			\
+  client.println ("<form id=\"position\" method=\"get\" \
+            onchange=\"createURL(this);\"		       \
             onkeypress=\"return keyHandler(this);\"            \
             >");
 
-	    client.println ("<table>");
+  client.println ("<table>");
 
 #ifdef DO_SLIDER
-	    client.println ("  <tr>");
+  client.println ("  <tr>");
 	    
-	    client.println ("  <td>");	// empty units
-	    client.println ("  </td>");
+  client.println ("  <td>");	// empty units
+  client.println ("  </td>");
 	    
-	    client.println ("  <td>");	// empty id
-	    client.println ("  </td>");
+  client.println ("  <td>");	// empty id
+  client.println ("  </td>");
 	    
-	    client.println ("  <td>");
-	    client.println ("  <input type=\"range\" min=\"-4\" max=\"4\" \
+  client.println ("  <td>");
+  client.println ("  <input type=\"range\" min=\"-4\" max=\"4\" \
 value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
-	    client.println ("  </td>");
-	    client.println ("  </tr>");
+  client.println ("  </td>");
+  client.println ("  </tr>");
 
-	    client.println ("  <tr>");
 #endif
+  client.println ("  <tr>");		// start pos offset row
 
-	    client.println ("    <td style=\"text-align:right\">");
-            client.print ("(cm)");
-            client.println ("    </td>");
+  client.println ("    <td style=\"text-align:right\">");
+  client.println ("(cm)");
+  client.println ("    </td>");
 
-	    BUILD_ETY (pdx, dx, 0.1, position);
-	    BUILD_ETY (pdy, dy, 0.1, position);
-	    BUILD_ETY (pdz, dz, 0.1, position);
+  BUILD_ETY (pdx, dx, 0.1, position);
+  BUILD_ETY (pdy, dy, 0.1, position);
+  BUILD_ETY (pdz, dz, 0.1, position);
 
-	    client.println ("  </tr>");
+  client.println ("  </tr>");		// end pos offset row
+  
+  client.println ("  <tr>");		// start pos attitude row
 
-	    client.println ("  <tr>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-            client.print ("(deg)");
-            client.println ("    </td>");
+  client.println ("    <td style=\"text-align:right\">");
+  client.println ("(deg)");
+  client.println ("    </td>");
 	    
-	    BUILD_ETY (proll,  roll,  1.0, position);
-	    BUILD_ETY (ppitch, pitch, 1.0, position);
-	    BUILD_ETY (pyaw,   yaw,   1.0, position);
-	    
-	    client.println ("  </tr>");
+  BUILD_ETY (proll,  roll,  1.0, position);
+  BUILD_ETY (ppitch, pitch, 1.0, position);
+  BUILD_ETY (pyaw,   yaw,   1.0, position);
+  
+  client.println ("  </tr>");		// end pos attitude row
 
-	    client.println ("  <tr>");
+  client.println ("</table>");
 
-	    client.println ("  </tr>");
+  client.print("</form>");
 
-	    client.println ("</table>");
-
-	    client.print("</form>");
-
-	    client.println ("</div>");		// end position form
+  client.println ("</div>");		// end position form
 	    
 
 
 	    /**** jitter form ****/
 
-	    client.println ("<div>");
-	    client.println ("<h2>Jitter</h2>");
+  client.println ("<div>");		// start jitter form
+  client.println ("<h2>Jitter</h2>");
 	    
-	    client.print ("<form id=\"jitter\" method=\"get\" \
-            onchange=\"createURL(this);\"			\
+  client.println ("<form id=\"jitter\" method=\"get\" \
+            onchange=\"createURL(this);\"		       \
             onkeypress=\"return keyHandler(this);\"            \
             >");
 	    
-	    client.println ("<table>");
+  client.println ("<table>");
+  
+  client.println ("  <tr>");
 
-	    client.println ("  <tr>");
+  client.println ("    <td style=\"text-align:right\">");
+  client.println ("(cm)");
+  client.println ("    </td>");
 
-	    client.println ("    <td style=\"text-align:right\">");
-            client.print ("(cm)");
-            client.println ("    </td>");
+  BUILD_ETY (jdx, dx, 0.1, jitter);
+  BUILD_ETY (jdy, dy, 0.1, jitter);
+  BUILD_ETY (jdz, dz, 0.1, jitter);
+  
+  client.println ("  </tr>");
 
-	    BUILD_ETY (jdx, dx, 0.1, jitter);
-	    BUILD_ETY (jdy, dy, 0.1, jitter);
-	    BUILD_ETY (jdz, dz, 0.1, jitter);
+  client.println ("  <tr>");
 
-	    client.println ("  </tr>");
+  client.println ("    <td style=\"text-align:right\">");
+  client.println ("(deg)");
+  client.println ("    </td>");
 
-	    client.println ("  <tr>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-            client.print ("(deg)");
-            client.println ("    </td>");
-
-	    BUILD_ETY (jroll,  roll,  1.0, jitter);
-	    BUILD_ETY (jpitch, pitch, 1.0, jitter);
-	    BUILD_ETY (jyaw,   yaw,   1.0, jitter);
-	    
-	    client.println ("  </tr>");
-
-	    client.println ("  <tr>");
-
-	    client.println ("  </tr>");
-
-	    client.println ("</table>");
+  BUILD_ETY (jroll,  roll,  1.0, jitter);
+  BUILD_ETY (jpitch, pitch, 1.0, jitter);
+  BUILD_ETY (jyaw,   yaw,   1.0, jitter);
+  
+  client.println ("  </tr>");
+  
+  client.println ("</table>");
 	 
-	    client.print("</form>");
-
-	    client.println ("</div>");		// end jitter form
-
+  client.println ("</form>");
+  
+  client.println ("</div>");		// end jitter form
+  
 
 
 	    /**** time form ****/
 
-	    client.println ("<div>");
-	    client.println ("<h2>Time</h2>");
+  client.println ("<div>");
+  client.println ("<h2>Time</h2>");
 	    
-	    client.print ("<form id=\"time\" method=\"get\" \
+  client.print ("<form id=\"time\" method=\"get\" \
             onchange=\"createURL(this);\"			\
             onkeypress=\"return keyHandler(this);\"            \
             >");
 	    
-	    client.println ("<table>");
+  client.println ("<table>");
 
-	    client.println ("  <tr>");
+  client.println ("  <tr>");
 
-	    client.println ("    <td style=\"text-align:right\">");
-            client.print ("(secs)");
-            client.println ("    </td>");
+  client.println ("    <td style=\"text-align:right\">");
+  client.println ("(secs)");
+  client.println ("    </td>");
 
-	    BUILD_ETYM (onset,    onset,    0.1, time);
-	    BUILD_ETYM (relax,    relax,    0.1, time);
-	    BUILD_ETYM (interval, interval, 0.1, time);
+  BUILD_ETYM (onset,    onset,    0.1, time);
+  BUILD_ETYM (relax,    relax,    0.1, time);
+  BUILD_ETYM (interval, interval, 0.1, time);
 
-	    client.println ("  </tr>");
+  client.println ("  </tr>");
 
-	    client.println ("  </tr>");
-	    
-	    client.println ("</table>");
+  client.println ("</table>");
 
-	    client.print("</form>");
+  client.println("</form>");
 
-	    client.println ("</div>");		// end time form
+  client.println ("</div>");		// end time form
 
 
 	    /**** editor form ****/
 
-	    client.println ("<form action=\"/form/submit\" method=\"GET\">");
-	    client.println ("  <textarea rows=\"5\" cols=\"60\" \
+  client.println ("<form action=\"/form/submit\" method=\"GET\">");
+  client.println ("  <textarea rows=\"5\" cols=\"60\" \
 name=\"text\" placeholder=\"Enter text\"></textarea>");
-	    client.println ("  <br/>");
-	    client.println ("  <input type=\"submit\" value=\"submit\"/>");
-	    client.println ("</form>");
-
-#if 0
-	    /****** ajax button ********/
-	    client.println ("<div id=\"result\">");
-	    client.println ("  <p>Content of the result DIV box will be \
-replaced by the server response</p>");
-	    client.println ("</div>");
-	    client.println ("<button type=\"button\" \
-onclick=\"displayFullName()\">Display Full Name</button>");
-#endif
-
-	    //#define DO_UPLOAD_FORM
-#ifdef DO_UPLOAD_FORM
-	    /**** upload form ****/
-
-#if 0
-	    client.println ("<form method=\”post\” \
-enctype=\”multipart/form-data\”>");
-	    client.println ("  <div>");
-	    client.println ("    <label for=\”script_uploads\”>\
- Choose any script to upload (txt, json, xml)</label>");
-	    client.println ("    <input type=\”file\” id=\”script_uploads\” \
-name=\”script_uploads\” accept=”.txt, .json, .xml” multiple>");
-	    client.println ("  </div>");
-	    client.println ("  <div class=\”preview\”>");
-	    client.println ("    <p> No files are currently selected for \
-upload </p>");
-	    client.println ("  </div>");
-	    client.println ("  <div>");
-	    client.println ("    <button> Click here to submit</button>");
-	    client.println ("  </div>");
-	    client.println ("</form>");
-#endif
-	    
-#if 0
-	    client.println ("<form action=\"uoload.php\" \
-enctype=\"multipart/form-data\" method=\"post\">");
-	    client.println ("  <label class=\"custom\" \
-for=\"file\">Upload Your File</label>");
-	    client.println ("  <input id=\"file\" \
-accept=\"text/plain,application/json.application/xml\" \
-name=\"fileToUpload\" type=\"file\" />");
-	    client.println ("  <button class=\"btn btn-success\" \
-name=\"submit\" type=\"submit\"> Upload File </button>");
-	    client.println ("</form>");
-#endif
-	    
-#if 0
-	    client.println ("<form id=\"uploadbanner\" \
- enctype=\"multipart/form-data\" method=\"post\" action=\"upload.php\">");
-
-	    client.println ("<input id=\"fileupload\" \
- name=\"mydata\" type=\"file\" />");
-
-	    client.println ("<input type=\"submit\" \
- value=\"submit\" id=\"submitf\" />");
-	    client.println ("</form>");
-#endif
-#endif		// DO_UPLOAD_FORM
+  client.println ("  <br/>");
+  client.println ("  <input type=\"submit\" value=\"submit\"/>");
+  client.println ("</form>");
 
 	    /***** end of forms ********/
 }
