@@ -134,19 +134,6 @@ void loop() {
 	    
 	    client.println("</style>");
 
-	    client.println("<?php");
-	    client.println("  $uploaddir = \"uploads/\";");
-	    client.println("  $uploadfile = $uploaddir . \
-basename( $_FILES['file']['name']);");
-
-	    client.println("  if(move_uploaded_file($_FILES['file']['tmp_name'], \
-$uploadfile)) {");
-	    client.println("    echo \"The file has been uploaded successfully\";");
-	    client.println("  } else {");
-	    client.println("    echo \"There was an error uploading the file\";");
-	    client.println("  }");
-	    client.println("?>");
-	    
 	    client.println ("<script>");
 	    client.println ("window.onload = function () {");
 	    client.println ("  let srch = window.location.search;");
@@ -192,52 +179,6 @@ $uploadfile)) {");
 	    initter (interval);
 
 	    client.println ("}");
-	    client.println ("</script>");
-
-
-	    client.println ("<script>");
-
-#if 0
-	    //https://www.geeksforgeeks.org/how-to-make-ajax-call-from-javascript/
-	    client.println ("function ajaxCall() {");
-            client.println ("  $.ajax({");
-  
-            client.println ("    url: 'https://jsonplaceholder.typicode.com/todos/1',");
-            client.println ("    type: \"GET\",");
-  
-            client.println ("    success: function (data) {");
-            client.println ("      var x = JSON.stringify(data);");
-            client.println ("      console.log(x);");
-	    client.println ("    },");
-  
-            client.println ("    error: function (error) {");
-	    client.println ("      console.log(`Error ${error}`);");
-            client.println ("    }");
-            client.println ("  });");
-	    client.println ("}");
-	    client.println ("ajaxCall();");
-#endif
-
-#if 0
-	    client.println ("function displayFullName() {");
-	    client.println ("  var request = new XMLHttpRequest();");
-
-	    client.println ("  var url = '/home/moller/mydata.txt';");
-	    client.println ("  request.open(\"GET\", url, true);");
-
-	    client.println ("  request.onreadystatechange = function() {");
-	    client.println ("  if(this.readyState === 4 && this.status === 200) {");
-            client.println ("    document.getElementById(\"result\").innerHTML \
-= this.responseText;");
-	    client.println ("  console.log(\"resp\");");
-	    client.println ("  console.log(this.responseText);");
-	    client.println ("  }");
-	    client.println ("};");
-
-	    client.println ("request.send();");
-	    client.println ("}");
-#endif
-
 
 	    /**** function reloadApp(el) ****/
 	    
