@@ -307,6 +307,22 @@ $uploadfile)) {");
 	    
 	    
 	    /****  forms ****/
+	    
+#define BUILD_ETY(id,lbl,stp,fm)                              \
+  client.println ("<td style=\"text-align:right\">"); \
+  client.println (  "<label for=\"" #id "\">" #lbl "</label>"); \
+  client.println ("</td>"); \
+  client.println ("<td style=\"text-align:right\">"); \
+  client.println (  "<input type=\"number\" id=\"" #id"\" step=\"" #stp "\" form=\"" #fm "\">"); \
+  client.println ("</td>")
+	    
+#define BUILD_ETYM(id,lbl,stp,fm)                              \
+  client.println ("<td style=\"text-align:right\">"); \
+  client.println (  "<label for=\"" #id "\">" #lbl "</label>"); \
+  client.println ("</td>"); \
+  client.println ("<td style=\"text-align:right\">"); \
+  client.println (  "<input type=\"number\" id=\"" #id"\" step=\"" #stp "\" form=\"" #fm "\" min=\"0\">"); \
+  client.println ("</td>")
 
 	    /**** position form ****/
 
@@ -342,32 +358,9 @@ value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
             client.print ("(cm)");
             client.println ("    </td>");
 
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"pdx\">dx</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"pdx\" step=\"0.1\" \
-form=\"position\">");
-	    client.println ("    </td>");
-	    
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"pdy\">dy</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"pdy\" step=\"0.1\" \
-form=\"position\">");
-	    client.println ("    </td>");
-    
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"pdz\">dz</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"pdz\" step=\"0.1\" \
-form=\"position\">");
-	    client.println ("    </td>");
+	    BUILD_ETY (pdx, dx, 0.1, position);
+	    BUILD_ETY (pdy, dy, 0.1, position);
+	    BUILD_ETY (pdz, dz, 0.1, position);
 
 	    client.println ("  </tr>");
 
@@ -377,32 +370,9 @@ form=\"position\">");
             client.print ("(deg)");
             client.println ("    </td>");
 	    
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"proll\">roll</label>");
-            client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"proll\" step=\"1.0\" \
-form=\"position\">");
-	    client.println ("    </td>");
-    
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"ppitch\">pitch</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"ppitch\" step=\"1.0\" \
-form=\"position\">");
-	    client.println ("    </td>");
-    
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"pyaw\">yaw</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"pyaw\" step=\"1.0\" \
-form=\"position\">");
-	    client.println ("    </td>");
+	    BUILD_ETY (proll,  roll,  1.0, position);
+	    BUILD_ETY (ppitch, pitch, 1.0, position);
+	    BUILD_ETY (pyaw,   yaw,   1.0, position);
 	    
 	    client.println ("  </tr>");
 
@@ -436,33 +406,9 @@ form=\"position\">");
             client.print ("(cm)");
             client.println ("    </td>");
 
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"jdx\">dx</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"jdx\" step=\"0.1\" \
-form=\"jitter\">");
-	    client.println ("    </td>");
-	    
-	    client.println ("    <td style=\"text-align:right\" \
-form=\"jitter\">");
-	    client.print ("<label for=\"jdy\">dy</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"jdy\" step=\"0.1\" \
-form=\"jitter\">");
-	    client.println ("    </td>");
-    
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"jdz\">dz</label>");
-            client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"jdz\" step=\"0.1\" \
-form=\"jitter\">");
-	    client.println ("    </td>");
+	    BUILD_ETY (jdx, dx, 0.1, jitter);
+	    BUILD_ETY (jdy, dy, 0.1, jitter);
+	    BUILD_ETY (jdz, dz, 0.1, jitter);
 
 	    client.println ("  </tr>");
 
@@ -472,31 +418,9 @@ form=\"jitter\">");
             client.print ("(deg)");
             client.println ("    </td>");
 
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"jroll\">roll</label>");
-            client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"jroll\" step=\"1.0\" \
-form=\"jitter\">");
-            client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"jpitch\">pitch</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"jpitch\" step=\"1.0\">");
-	    client.println ("    </td>");
-    
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"jyaw\">yaw</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"jyaw\" step=\"1.0\" \
-form=\"jitter\">");
-	    client.println ("    </td>");
+	    BUILD_ETY (jroll,  roll,  1.0, jitter);
+	    BUILD_ETY (jpitch, pitch, 1.0, jitter);
+	    BUILD_ETY (jyaw,   yaw,   1.0, jitter);
 	    
 	    client.println ("  </tr>");
 
@@ -530,32 +454,9 @@ form=\"jitter\">");
             client.print ("(secs)");
             client.println ("    </td>");
 
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"onset\">onset</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"onset\" step=\"0.1\" \
-form=\"time\" min=\"0\">");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"relax\">relax</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"relax\" step=\"0.1\" \
-form=\"time\" min=\"0\">");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<label for=\"interval\">interval</label>");
-	    client.println ("    </td>");
-
-	    client.println ("    <td style=\"text-align:right\">");
-	    client.print ("<input type=\"number\" id=\"interval\" step=\"0.1\" \
-form=\"time\" min=\"0\">");
-	    client.println ("    </td>");
+	    BUILD_ETYM (onset,    onset,    0.1, time);
+	    BUILD_ETYM (relax,    relax,    0.1, time);
+	    BUILD_ETYM (interval, interval, 0.1, time);
 
 	    client.println ("  </tr>");
 
