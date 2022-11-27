@@ -98,48 +98,9 @@ parseString(double &val, String currentLine, String tgt, int &startPos)
   }
 }
 
-              
-void loop() {
-  WiFiClient client = server.available();   // listen for incoming clients
-
-  if (client) {                             // if you get a client,
-    // make a String to hold incoming data from the client
-    String currentLine = "";
-    while (client.connected()) {    // loop while the client's connected
-      if (client.available()) {     // if there's bytes to read from the client,
-	
-        char c = client.read();     // read a byte, then
-        if (c == '\n') {            // if the byte is a newline character
-          if (currentLine.length() == 0) {
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.println();
-
-	    client.println("<style>");
-
-	    client.println("th, td {");
-	    client.println("  padding-top: 0px;");
-            client.println("  padding-bottom: 0px;");
-            client.println("  padding-left: 10px;");
-            client.println("  padding-right: 0px;");
-            client.println("}");
-	    
-	    client.println("div {");
-	    client.println("width: 820px;");
-	    client.println("background-color: lightgrey;");
-	    client.println("border: 15px lightgrey;");
-	    client.println("padding: 15px;");
-	    client.println("margin: 20px;");
-	    client.println("}");
-	    
-	    client.println("</style>");
-
-	    client.println ("<script>");
-	    client.println ("window.onload = function () {");
-	    client.println ("  let srch = window.location.search;");
-	    client.println ("  const searchParams = \
- new URLSearchParams(srch);");
-
+void
+buildPage (WiFiClient client)
+{
 #ifdef DO_SLIDER
 #define initter(v)				\
   { \
@@ -161,6 +122,11 @@ void loop() {
   }
 #endif
   
+	    client.println ("<script>");
+	    client.println ("window.onload = function () {");
+	    client.println ("  let srch = window.location.search;");
+	    client.println ("  const searchParams = \
+ new URLSearchParams(srch);");
 
 	    initter (pdx);
 	    initter (pdy);
@@ -177,8 +143,7 @@ void loop() {
 	    initter (onset);
 	    initter (relax);
 	    initter (interval);
-
-	    client.println ("}");
+	    client.println ("}"); // end window.onload function
 
 	    /**** function reloadApp(el) ****/
 	    
@@ -240,6 +205,8 @@ void loop() {
 	    client.println ("}");
 
 	    client.println ("</script>");
+
+	    /***** end scripts *******/
 
 
 	    /*** begin page ****/
@@ -479,6 +446,48 @@ name=\"submit\" type=\"submit\"> Upload File </button>");
 #endif		// DO_UPLOAD_FORM
 
 	    /***** end of forms ********/
+}
+
+
+              
+void loop() {
+  WiFiClient client = server.available();   // listen for incoming clients
+
+  if (client) {                             // if you get a client,
+    // make a String to hold incoming data from the client
+    String currentLine = "";
+    while (client.connected()) {    // loop while the client's connected
+      if (client.available()) {     // if there's bytes to read from the client,
+	
+        char c = client.read();     // read a byte, then
+        if (c == '\n') {            // if the byte is a newline character
+          if (currentLine.length() == 0) {
+            client.println("HTTP/1.1 200 OK");
+            client.println("Content-type:text/html");
+            client.println();
+
+	    client.println("<style>");
+
+	    client.println("th, td {");
+	    client.println("  padding-top: 0px;");
+            client.println("  padding-bottom: 0px;");
+            client.println("  padding-left: 10px;");
+            client.println("  padding-right: 0px;");
+            client.println("}");
+	    
+	    client.println("div {");
+	    client.println("width: 820px;");
+	    client.println("background-color: lightgrey;");
+	    client.println("border: 15px lightgrey;");
+	    client.println("padding: 15px;");
+	    client.println("margin: 20px;");
+	    client.println("}");
+	    
+	    client.println("</style>");
+
+	    buildPage (client);
+	    /***** scripts *******/
+
 
     
 	    client.println ();
