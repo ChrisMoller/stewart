@@ -50,15 +50,16 @@ Runtime controls:
 
 # Hardware
 
-There are at present two proposed hardware designs, respectively in the
-hardware and hardware2 directories.  These designs are functionally identical
-except that the latter includes a small display screen showing things like
-the platform position and orientation and jitter positional and rotational
-parameters.  Both designs include both a hardware description, primarily in
-the form of a diagram.json file, and the Arduino code, in sketch.ino files,
-necessary to implement the necessary function.  (The non-display version of
-the hardware is based on the Arduino Uno card while, due to pin-out
-requirements, the display version needs the Arduino Mega.)
+There are at present three proposed hardware designs, respectively in the
+hardware2, hardware3, and hardware4 directories.  Designs 2 and 3 include
+physical control panels and functionally identical except that the latter
+includes a small display screen showing things like the platform position and
+orientation and jitter positional and rotational parameters.  Both designs
+include both a hardware description, primarily in the form of a diagram.json
+file, and the Arduino code, in sketch.ino files, necessary to implement the
+necessary function.  (The non-display version of the hardware is based on the
+Arduino Uno card while, due to pin-out requirements, the display version needs
+the Arduino Mega.)
 
 The designs have idential controls, a pair of 3-axis joysticks, a pair of
 buttons that determine the mode of the joysticks, and a Run/Pause button.
@@ -82,7 +83,14 @@ and orientation of the platform.  No random variation is applied.
 
 The Run/Pause button does what you expect.
 
+Both of these design have effectovely been abandoned in favour of the
+hardware4 design.
 
+Hardware4 uses the Arduino MKR 1010 Wifi device and is controlled through
+WiFi--it appears on the local network and is controlled through a
+Javascript/HTML web page that the Arduino, acting as a web server, creates.
+This is, of course, far more flexible than a hardware control panel.  That web
+page is still under development.
 	
 
 	
