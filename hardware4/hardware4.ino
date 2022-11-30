@@ -29,6 +29,7 @@ double onset    = 0.0;
 double relax    = 0.0;
 double interval = 0.0;
 
+
 void setup() {
 
   // check for the WiFi module:
@@ -124,8 +125,16 @@ buildPage (WiFiClient client)
   
 	    /***** scripts *******/
 
-
   client.println ("<script>");
+
+// When the user clicks on div, open the popup
+  client.println ("function showEditor() {");
+  client.println ("  var popup = document.getElementById(\"myPopup\");");
+  client.println ("  popup.classList.add(\"show\");");
+  client.println ("  var text = document.getElementById('editor')");
+  client.println ("  text.value = 'henry';");
+  client.println ("}");
+
   client.println ("window.onload = function () {");
   client.println ("  let srch = window.location.search;");
   client.println ("  const searchParams = \
@@ -370,14 +379,56 @@ value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
   client.println ("</div>");		// end time form
 
 
-	    /**** editor form ****/
+	    /**** editor popup ****/
 
-  client.println ("<form action=\"/form/submit\" method=\"GET\">");
-  client.println ("  <textarea rows=\"5\" cols=\"60\" \
-name=\"text\" placeholder=\"Enter text\"></textarea>");
-  client.println ("  <br/>");
-  client.println ("  <input type=\"submit\" value=\"submit\"/>");
+  // http://arduino/?text={%22name%22%20:%20%22george%22;%22stuff%22%20:%20{%20%20%20%20%22thing%22%20:%20%22gadget;}}"
+
+  // %22 = doublequote
+  // $20 = space
+  
+  client.println ("<script>");
+  client.println ("function saveText() {");
+  client.println ("  var text = window.location.origin + \"?text=\" + \
+document.getElementById('editor').value;");
+  client.println ("  window.location.href = text;");
+  client.println ("  return false;");
+  client.println ("}");
+  
+  client.println ("function abandonText() {");
+  client.println ("  window.location.href = window.location.origin;");
+  client.println ("  return false;");
+  client.println ("}");
+  client.println ("</script>");
+
+  client.println ("<div class=\"popup\" \
+onclick=\"showEditor()\">Open editor");
+
+  client.println ("<span class=\"popuptext\" id=\"myPopup\">");
+  client.println ("<textarea id=\"editor\" rows=\"5\" \
+    method=\"get\"></textarea><br>");
+  client.println ("<button type=\"button\" \
+onclick=\"abandonText();\">Abandon</button>");
+  client.println ("<button type=\"button\" \
+onclick=\"saveText();\">Save</button>");
+  client.println ("</span>");
+  client.println ("</div>");
+
+  
+#if 0
+  /********* upload form *******/
+  
+  client.println ("<div>");
+  client.println ("<form id=\"uploadbanner\" \
+enctype=\"multipart/form-data\" method=\"post\" action=\"#\">");
+  client.println ("  <input id=\"fileupload\" \
+name=\"myfile\" type=\"file\" \
+accept=\"text/plain,application/json.application/xml\"/>");
+  client.println ("  <input type=\"submit\" value=\"submit\" \
+id=\"submit\" />");
   client.println ("</form>");
+  client.println ("</div>");
+#endif
+
 
 	    /***** end of forms ********/
 }
@@ -402,6 +453,50 @@ void loop() {
 
 	    client.println("<style>");
 
+	    /* Popup container */
+	    client.println (".popup {");
+	    client.println ("position: relative;");
+	    client.println ("display: inline-block;");
+	    client.println ("cursor: pointer;");
+	    client.println ("}");
+
+/* The actual popup (appears on top) */
+	    client.println (".popup .popuptext {");
+	    client.println ("visibility: hidden;");
+	    client.println ("width: 160px;");
+	    client.println ("background-color: #555;");
+	    client.println ("color: #fff;");
+	    client.println ("text-align: center;");
+	    client.println ("border-radius: 6px;");
+	    client.println ("padding: 8px 0;");
+	    client.println ("position: absolute;");
+	    client.println ("z-index: 1;");
+	    client.println ("bottom: 125%;");
+	    client.println ("left: 50%;");
+	    client.println ("margin-left: -80px;");
+	    client.println ("}");
+
+
+/* Popup arrow */
+	    client.println (".popup .popuptext::after {");
+	    client.println ("content: "";");
+	    client.println ("position: absolute;");
+	    client.println ("top: 100%;");
+	    client.println ("left: 50%;");
+	    client.println ("margin-left: -5px;");
+	    client.println ("border-width: 5px;");
+	    client.println ("border-style: solid;");
+	    client.println ("border-color: #555 transparent \
+transparent transparent;");
+	    client.println ("}");
+
+/* Toggle this class when clicking on the
+   popup container (hide and show the popup) */
+	    client.println (".popup .show {");
+	    client.println ("visibility: visible;");
+	    client.println ("}");
+
+
 	    client.println("th, td {");
 	    client.println("  padding-top: 0px;");
             client.println("  padding-bottom: 0px;");
@@ -420,53 +515,55 @@ void loop() {
 	    client.println("</style>");
 
 	    buildPage (client);
-	    /***** scripts *******/
-
-
     
 	    client.println ();
             break;
-          } else {
-	    Serial.println (currentLine);
-            if (currentLine.startsWith("Referer:")) {
-              int startPos = 0;
-              parseString(jdx,    currentLine, "jdx=",    startPos);
-              parseString(jdy,    currentLine, "jdy=",    startPos);
-              parseString(jdz,    currentLine, "jdz=",    startPos);
-              parseString(jroll,  currentLine, "jroll=",  startPos);
-              parseString(jpitch, currentLine, "jpitch=", startPos);
-              parseString(jyaw,   currentLine, "jyaw=",   startPos);
-	      startPos = 0;
-              parseString(pdx,    currentLine, "pdx=",    startPos);
-              parseString(pdy,    currentLine, "pdy=",    startPos);
-              parseString(pdz,    currentLine, "pdz=",    startPos);
-              parseString(proll,  currentLine, "proll=",  startPos);
-              parseString(ppitch, currentLine, "ppitch=", startPos);
-              parseString(pyaw,   currentLine, "pyaw=",   startPos);
-	      if (!isnan (jdx) &&
-		  !isnan (jdy) &&
-		  !isnan (jdz) &&
-		  !isnan (jroll) &&
-		  !isnan (jpitch) &&
-		  !isnan (jyaw)
-		  ) {
-#ifdef DO_BLINK_TEST
-		blink ((int)fabs (jdx));
-		blink ((int)fabs (jdy));
-		blink ((int)fabs (jdz));
+          }		// if empty line
+	  else {	// non-empty line
+#if 0
+	    Serial.print ("\"");
+	    Serial.print (currentLine);
+	    Serial.println ("\"");
 #endif
-	      }
-            }
-	    else {
-	      
-	    }
-            currentLine = "";
-          }
-        } else if (c != '\r') {
+	    if (currentLine.startsWith("Referer:")) {
+	      {
+		int startPos = 0;
+		parseString(jdx,    currentLine, "jdx=",    startPos);
+		parseString(jdy,    currentLine, "jdy=",    startPos);
+		parseString(jdz,    currentLine, "jdz=",    startPos);
+		parseString(jroll,  currentLine, "jroll=",  startPos);
+		parseString(jpitch, currentLine, "jpitch=", startPos);
+		parseString(jyaw,   currentLine, "jyaw=",   startPos);
+		startPos = 0;
+		parseString(pdx,    currentLine, "pdx=",    startPos);
+		parseString(pdy,    currentLine, "pdy=",    startPos);
+		parseString(pdz,    currentLine, "pdz=",    startPos);
+		parseString(proll,  currentLine, "proll=",  startPos);
+		parseString(ppitch, currentLine, "ppitch=", startPos);
+		parseString(pyaw,   currentLine, "pyaw=",   startPos);
+#ifdef DO_BLINK_TEST
+		if (!isnan (jdx) &&
+		    !isnan (jdy) &&
+		    !isnan (jdz) &&
+		    !isnan (jroll) &&
+		    !isnan (jpitch) &&
+		    !isnan (jyaw)
+		    ) {
+		  blink ((int)fabs (jdx));
+		  blink ((int)fabs (jdy));
+		  blink ((int)fabs (jdz));
+		}
+#endif
+	      }		// if not editor
+	    }			// if Referer
+	    currentLine = "";
+	  }			// non empty line
+        }			// if '\n'
+	else if (c != '\r') {
           currentLine += c;      // add it to the end of the currentLine
         }
-      }
-    }
+      }				// if data available
+    }				// if connected
     client.stop();
-  }
-}
+  }				// if client
+}				// end of loop
