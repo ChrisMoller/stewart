@@ -344,23 +344,6 @@ buildPage (WiFiClient client)
 
 
 	    
-	    /**** function createURL(el) ****/
-	    
-  client.println ("function createURL(el) {");
-  client.println ("  reloadApp (el);");
-  client.println ("  return false;");
-  client.println ("}");
-
-	    
-	    /**** function keyHandler(el) ****/
-
-  client.println ("function keyHandler(el) {");
-  client.println ("  if (event.keyCode=='13'){");
-  client.println ("    reloadApp (el);");
-  client.println ("    return false;");
-  client.println ("  }");
-  client.println ("  return true;");
-  client.println ("}");
 
   client.println ("function updateParam(el) {");
 
@@ -386,6 +369,16 @@ el.id + \"=\" + el.value;");
   client.println ("XHR.setRequestHeader('Content-Type', 'text/plain');");
   client.println ("XHR.send();");
 
+  client.println ("}");
+	    
+	    /**** function keyHandler(el) ****/
+
+  client.println ("function keyHandler(el) {");
+  client.println ("  if (event.keyCode=='13'){");
+  client.println ("    updateParam (el);");
+  client.println ("    return false;");
+  client.println ("  }");
+  client.println ("  return true;");
   client.println ("}");
 	    
   
@@ -414,7 +407,7 @@ el.id + \"=\" + el.value;");
   client.println (  "<label for=\"" #id "\">" #lbl "</label>"); \
   client.println ("</td>"); \
   client.println ("<td style=\"text-align:right\">"); \
-  client.println (  "<input type=\"number\" id=\"" #id"\" step=\"" #stp "\" onchange=\"updateParam(this);\" min=\"0\">"); \
+  client.println (  "<input type=\"number\" id=\"" #id"\" step=\"" #stp "\" onchange=\"updateParam(this);\" onkeypress=\"return keyHandler(this);\" min=\"0\">"); \
   client.println ("</td>")
 
 	    /**** position form ****/
@@ -422,9 +415,7 @@ el.id + \"=\" + el.value;");
   client.println ("<div>");			// start position form
   client.println ("<h2>Position</h2>");
 
-  client.println ("<form id=\"position\" method=\"get\" \
-            onkeypress=\"return keyHandler(this);\"            \
-            >");
+  client.println ("<form id=\"position\" method=\"get\">");
 
   client.println ("<table>");
 
@@ -481,9 +472,7 @@ value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
   client.println ("<div>");		// start jitter form
   client.println ("<h2>Jitter</h2>");
 	    
-  client.println ("<form id=\"jitter\" method=\"get\" \
-            onkeypress=\"return keyHandler(this);\"            \
-            >");
+  client.println ("<form id=\"jitter\" method=\"get\">");
 	    
   client.println ("<table>");
   
@@ -524,9 +513,7 @@ value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
   client.println ("<div>");
   client.println ("<h2>Time</h2>");
 	    
-  client.println ("<form id=\"time\" method=\"get\" \
-            onkeypress=\"return keyHandler(this);\"            \
-            >");
+  client.println ("<form id=\"time\" method=\"get\">");
 	    
   client.println ("<table>");
 
@@ -748,17 +735,7 @@ transparent transparent;");
 	  else {	// non-empty line
 	    //	    Serial.println (currentLine);
 	    if (currentLine.startsWith("Referer:")) {
-#define TEXTFLAG "text="
-	      String textFlag = TEXTFLAG;
-	      int textStart = currentLine.indexOf (textFlag);
-	      if (-1 != textStart) {
-#define TEXTTERM " HTTP/1.1"
-		String textTerm = TEXTFLAG;
-		int textEnd = currentLine.indexOf (textTerm);
-		String text = currentLine.substring (textStart, textEnd);
-		Serial.println (text);
-	      }
-	      else {
+	      {
 		int startPos = 0;
 		parseString(jdx,    currentLine, "jdx=",    startPos);
 		parseString(jdy,    currentLine, "jdy=",    startPos);
