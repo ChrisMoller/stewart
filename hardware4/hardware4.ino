@@ -386,6 +386,79 @@ el.id + \"=\" + el.value;");
 
 	    /***** end scripts *******/
 
+  /********** styles ***********/
+
+  client.println("<style>");
+
+  client.println (".editor{");
+  client.println ("width: 560px;");
+  client.println ("height: 180px;");
+  client.println ("rows: 5;");
+  client.println ("cols: 50;");
+  client.println ("wrap: off;");
+  client.println ("background-color: lightgrey;");
+  client.println ("}");
+	    
+	    /* Popup container */
+  client.println (".popup {");
+  client.println ("position: relative;");
+  client.println ("display: inline-block;");
+  client.println ("cursor: pointer;");
+  client.println ("}");
+
+/* The actual popup (appears on top) */
+  client.println (".popup .popuptext {");
+  client.println ("visibility: hidden;");
+  client.println ("width: 560px;");
+  client.println ("height: 180px;");
+  client.println ("background-color: #555;");
+  client.println ("color: #fff;");
+  client.println ("text-align: center;");
+  client.println ("border-radius: 6px;");
+  client.println ("padding: 8px 0;");
+  client.println ("position: absolute;");
+  client.println ("z-index: 1;");
+  client.println ("bottom: 125%;");
+  client.println ("left: 30%;");
+  client.println ("margin-left: -80px;");
+  client.println ("}");
+
+
+/* Popup arrow */
+  client.println (".popup .popuptext::after {");
+  client.println ("content: "";");
+  client.println ("position: absolute;");
+  client.println ("top: 100%;");
+  client.println ("left: 30%;");
+  client.println ("margin-left: -5px;");
+  client.println ("border-width: 5px;");
+  client.println ("border-style: solid;");
+  client.println ("border-color: #555 transparent transparent transparent;");
+  client.println ("}");
+
+/* Toggle this class when clicking on the
+   popup container (hide and show the popup) */
+  client.println (".popup .show {");
+  client.println ("visibility: visible;");
+  client.println ("}");
+
+
+  client.println("th, td {");
+  client.println("  padding-top: 0px;");
+  client.println("  padding-bottom: 0px;");
+  client.println("  padding-left: 10px;");
+  client.println("  padding-right: 0px;");
+  client.println("}");
+  
+  client.println("div {");
+  client.println("width: 820px;");
+  client.println("background-color: lightgrey;");
+  client.println("border: 15px lightgrey;");
+  client.println("padding: 15px;");
+  client.println("margin: 20px;");
+  client.println("}");
+  
+  client.println("</style>");
 
 	    /*** begin page ****/
 	    
@@ -653,82 +726,9 @@ void loop() {
             client.println("HTTP/1.1 200 OK");
             client.println("Content-type:text/html");
             client.println();
-
-	    client.println("<style>");
-
-	    client.println (".editor{");
-	    client.println ("width: 560px;");
-	    client.println ("height: 180px;");
-	    client.println ("rows: 5;");
-	    client.println ("cols: 50;");
-	    client.println ("wrap: off;");
-	    client.println ("background-color: lightgrey;");
-	    client.println ("}");
 	    
-	    /* Popup container */
-	    client.println (".popup {");
-	    client.println ("position: relative;");
-	    client.println ("display: inline-block;");
-	    client.println ("cursor: pointer;");
-	    client.println ("}");
-
-/* The actual popup (appears on top) */
-	    client.println (".popup .popuptext {");
-	    client.println ("visibility: hidden;");
-	    client.println ("width: 560px;");
-	    client.println ("height: 180px;");
-	    client.println ("background-color: #555;");
-	    client.println ("color: #fff;");
-	    client.println ("text-align: center;");
-	    client.println ("border-radius: 6px;");
-	    client.println ("padding: 8px 0;");
-	    client.println ("position: absolute;");
-	    client.println ("z-index: 1;");
-	    client.println ("bottom: 125%;");
-	    client.println ("left: 30%;");
-	    client.println ("margin-left: -80px;");
-	    client.println ("}");
-
-
-/* Popup arrow */
-	    client.println (".popup .popuptext::after {");
-	    client.println ("content: "";");
-	    client.println ("position: absolute;");
-	    client.println ("top: 100%;");
-	    client.println ("left: 30%;");
-	    client.println ("margin-left: -5px;");
-	    client.println ("border-width: 5px;");
-	    client.println ("border-style: solid;");
-	    client.println ("border-color: #555 transparent \
-transparent transparent;");
-	    client.println ("}");
-
-/* Toggle this class when clicking on the
-   popup container (hide and show the popup) */
-	    client.println (".popup .show {");
-	    client.println ("visibility: visible;");
-	    client.println ("}");
-
-
-	    client.println("th, td {");
-	    client.println("  padding-top: 0px;");
-            client.println("  padding-bottom: 0px;");
-            client.println("  padding-left: 10px;");
-            client.println("  padding-right: 0px;");
-            client.println("}");
-	    
-	    client.println("div {");
-	    client.println("width: 820px;");
-	    client.println("background-color: lightgrey;");
-	    client.println("border: 15px lightgrey;");
-	    client.println("padding: 15px;");
-	    client.println("margin: 20px;");
-	    client.println("}");
-	    
-	    client.println("</style>");
-
 	    buildPage (client);
-    
+
 	    client.println ();
             break;
           }		// if empty line
