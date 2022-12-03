@@ -51,7 +51,7 @@ Runtime controls:
 # Hardware
 
 There are at present two proposed hardware designs, respectively in the
-hardware3, and hardware4 directories.  Design 3 includes a physical control
+hardware2, and hardware4 directories.  Design 2 includes a physical control
 panel and has been abandoned in favour of the hardware4 design.
 
 Hardware4 uses the Arduino MKR 1010 Wifi device and is controlled through

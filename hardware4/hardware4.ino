@@ -1,4 +1,5 @@
 #include <SPI.h>
+#include <SD.h>
 #include <WiFiNINA.h>
 
 #define SECRET_SSID "NETGEAR80"
@@ -8,6 +9,8 @@ char ssid[] = SECRET_SSID;    // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password 
 
 int status = WL_IDLE_STATUS;
+
+IPAddress ip;
 
 WiFiServer server(80);
 
@@ -55,14 +58,124 @@ void setup() {
     delay(1000);   // wait 10 seconds for connection:
   }
 
+  ip = WiFi.localIP();
+
   server.begin();    // start the web server on port 80
   
   Serial.println("Connected...");
 
+
 #ifdef DO_BLINK_TEST
   pinMode(LED_BUILTIN, OUTPUT);
 #endif
+
+  if (!SD.begin(4)) {
+    Serial.println("initialization failed!");
+    while (1);
+  }
+
+#if 0
+  File myFile = SD.open("test.txt", FILE_WRITE);
   
+  if (myFile) {
+    Serial.print("Writing to test.txt...");
+    myFile.println("testing 1, 2, 3.");
+    // close the file:
+    myFile.close();
+    Serial.println("done.");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+
+  myFile = SD.open("test.txt");
+  if (myFile) {
+    Serial.println("test.txt:");
+     
+    // read from the file until there's nothing else in it:
+    while (myFile.available()) {
+      Serial.write(myFile.read());
+    }
+    // close the file:
+    myFile.close();
+    SD.remove("test.txt");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+
+  Sd2Card card;
+  SdVolume volume;
+  SdFile root;
+
+  const int chipSelect = 4;
+
+  if (!card.init(SPI_HALF_SPEED, chipSelect)) {
+    Serial.println("no go");
+  }
+  else {
+    Serial.print("Card type:         ");
+    switch (card.type()) {
+    case SD_CARD_TYPE_SD1:
+      Serial.println("SD1");
+      break;
+    case SD_CARD_TYPE_SD2:
+      Serial.println("SD2");
+      break;
+    case SD_CARD_TYPE_SDHC:
+      Serial.println("SDHC");
+      break;
+    default:
+      Serial.println("Unknown");
+    }
+	
+    if (!volume.init(card)) {
+      Serial.println("Could not find FAT16/FAT32 partition.\n\
+Make sure you've formatted the card");
+      while (1);
+    }
+	
+    Serial.print("Clusters:          ");
+    Serial.println(volume.clusterCount());
+    
+    Serial.print("Blocks x Cluster:  ");
+    Serial.println(volume.blocksPerCluster());
+	
+    Serial.print("Total Blocks:      ");
+    Serial.println(volume.blocksPerCluster() * volume.clusterCount());
+	
+    Serial.println();
+	
+    uint32_t volumesize;
+
+    Serial.print("Volume type is:    FAT");
+    Serial.println(volume.fatType(), DEC);
+    volumesize = volume.blocksPerCluster();  
+    volumesize *= volume.clusterCount();    
+    volumesize /= 2; // SD card blocks are always 512 bytes (2 blocks are 1KB)
+
+    Serial.print("Volume size (Kb):  ");
+    Serial.println(volumesize);
+	
+    Serial.print("Volume size (Mb):  ");
+    volumesize /= 1024;
+    Serial.println(volumesize);
+	
+    Serial.print("Volume size (Gb):  ");
+    Serial.println((float)volumesize / 1024.0);
+	
+    Serial.println("\nFiles found on the card \
+(name, date and size in bytes): ");
+	
+    root.openRoot(volume);
+	
+    // list all files in the card with date and size
+    
+    root.ls(LS_R | LS_DATE | LS_SIZE);
+    
+    root.close();
+  }
+#endif
 }
 
 #ifdef DO_BLINK_TEST
@@ -127,12 +240,45 @@ buildPage (WiFiClient client)
 
   client.println ("<script>");
 
+  /***
+      {
+        "name": "whatever",
+	"position": [ "dx": "val:, "dy": "val", "dz": "val",
+	   "roll": "val", "pitch": "val", "yaw": "val"],
+	"jitter": [ "dx": "val:, "dy": "val", "dz": "val"],
+	   "roll": "val", "pitch": "val", "yaw": "val"],
+	"time": [ "onset": "val:, "relax": "val", "interval": "val"]
+      }
+   ***/
+
+  // text.value = '{' + '  "name": "", + '}';
 // When the user clicks on div, open the popup
   client.println ("function showEditor() {");
   client.println ("  var popup = document.getElementById(\"myPopup\");");
   client.println ("  popup.classList.add(\"show\");");
   client.println ("  var text = document.getElementById('editor')");
-  client.println ("  text.value = 'henry';");
+  client.println ("  text.value = \
+'{\\n' + \
+'  \"name\": \"\",\\n' + \
+'  \"position\": [ ' + \
+'\"dx\": \"'    + position.pdx.value + '\", ' + \
+'\"dy\": \"'    + position.pdy.value + '\", ' + \
+'\"dz\": \"'    + position.pdz.value + '\",\\n ' + \
+'    \"roll\": \"'  + position.proll.value + '\", ' + \
+'\"pitch\": \"' + position.ppitch.value + '\", ' + \
+'\"yaw\": \"'   + position.pyaw.value + '\"],\\n ' + \
+'  \"jitter\": [ ' + \
+'\"dx\": \"'    + jitter.jdx.value + '\", ' + \
+'\"dy\": \"'    + jitter.jdy.value + '\", ' + \
+'\"dz\": \"'    + jitter.jdz.value + '\",\\n ' + \
+'    \"roll\": \"'  + jitter.jroll.value + '\", ' + \
+'\"pitch\": \"' + jitter.jpitch.value + '\", ' + \
+'\"yaw\": \"'   + jitter.jyaw.value + '\"],\\n ' + \
+'  \"time\": [ ' + \
+'\"onset\": \"'    + time.onset.value + '\", ' + \
+'\"relax\": \"'    + time.relax.value + '\", ' + \
+'\"interval\": \"' + time.interval.value + '\"]\\n ' + \
+'}';");
   client.println ("}");
 
   client.println ("window.onload = function () {");
@@ -215,6 +361,33 @@ buildPage (WiFiClient client)
   client.println ("  }");
   client.println ("  return true;");
   client.println ("}");
+
+  client.println ("function updateParam(el) {");
+
+  client.println ("const XHR = new XMLHttpRequest();");
+
+#if 0
+  client.println ("XHR.onload = function() {");
+  client.println ("  alert(`Loaded: ${XHR.status} ${XHR.response}`);");
+  client.println ("};");
+
+  client.println ("XHR.onerror = function() {");
+  client.println ("  alert(`Network Error`);");
+  client.println ("};");
+
+  client.println ("XHR.onprogress = function(event) {");
+  client.println ("  alert(`Received ${event.loaded} of ${event.total}`);");
+  client.println ("};");
+#endif
+
+  client.println ("  var text = window.location.origin + \"?update=\" + \
+el.id + \"=\" + el.value;");
+  client.println ("XHR.open('POST', text);");
+  client.println ("XHR.setRequestHeader('Content-Type', 'text/plain');");
+  client.println ("XHR.send();");
+
+  client.println ("}");
+	    
   
   client.println ("</script>");
 
@@ -227,13 +400,13 @@ buildPage (WiFiClient client)
 	    
 	    
 	    /****  forms ****/
-	    
-#define BUILD_ETY(id,lbl,stp,fm)                              \
+
+#define BUILD_ETY(id,lbl,stp,fm)		      \
   client.println ("<td style=\"text-align:right\">"); \
   client.println (  "<label for=\"" #id "\">" #lbl "</label>"); \
   client.println ("</td>"); \
   client.println ("<td style=\"text-align:right\">"); \
-  client.println (  "<input type=\"number\" id=\"" #id"\" step=\"" #stp "\" form=\"" #fm "\">"); \
+  client.println (  "<input type=\"number\" id=\"" #id"\" step=\"" #stp "\" onchange=\"updateParam(this);\">"); \
   client.println ("</td>")
 	    
 #define BUILD_ETYM(id,lbl,stp,fm)                              \
@@ -241,7 +414,7 @@ buildPage (WiFiClient client)
   client.println (  "<label for=\"" #id "\">" #lbl "</label>"); \
   client.println ("</td>"); \
   client.println ("<td style=\"text-align:right\">"); \
-  client.println (  "<input type=\"number\" id=\"" #id"\" step=\"" #stp "\" form=\"" #fm "\" min=\"0\">"); \
+  client.println (  "<input type=\"number\" id=\"" #id"\" step=\"" #stp "\" onchange=\"updateParam(this);\" min=\"0\">"); \
   client.println ("</td>")
 
 	    /**** position form ****/
@@ -250,7 +423,6 @@ buildPage (WiFiClient client)
   client.println ("<h2>Position</h2>");
 
   client.println ("<form id=\"position\" method=\"get\" \
-            onchange=\"createURL(this);\"		       \
             onkeypress=\"return keyHandler(this);\"            \
             >");
 
@@ -310,7 +482,6 @@ value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
   client.println ("<h2>Jitter</h2>");
 	    
   client.println ("<form id=\"jitter\" method=\"get\" \
-            onchange=\"createURL(this);\"		       \
             onkeypress=\"return keyHandler(this);\"            \
             >");
 	    
@@ -353,8 +524,7 @@ value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
   client.println ("<div>");
   client.println ("<h2>Time</h2>");
 	    
-  client.print ("<form id=\"time\" method=\"get\" \
-            onchange=\"createURL(this);\"			\
+  client.println ("<form id=\"time\" method=\"get\" \
             onkeypress=\"return keyHandler(this);\"            \
             >");
 	    
@@ -385,14 +555,35 @@ value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
 
   // %22 = doublequote
   // $20 = space
+
+  // https://stackoverflow.com/questions/2367979/pass-post-data-with-window-location-href
+
+
+
+client.println ("<script>");
+#if 1
+  client.println ("function saveText() {");
+
+  client.println ("const XHR = new XMLHttpRequest();");
   
-  client.println ("<script>");
+
+   client.println ("  var text = window.location.origin + \"?text=\" + \
+document.getElementById('editor').value;");
+  client.println ("XHR.open('POST', text);");
+  client.println ("XHR.setRequestHeader('Content-Type', 'text/plain');");
+  client.println ("XHR.send();");
+
+  client.println ("}");
+ 
+  
+#else
   client.println ("function saveText() {");
   client.println ("  var text = window.location.origin + \"?text=\" + \
 document.getElementById('editor').value;");
   client.println ("  window.location.href = text;");
   client.println ("  return false;");
   client.println ("}");
+#endif
   
   client.println ("function abandonText() {");
   client.println ("  window.location.href = window.location.origin;");
@@ -400,19 +591,43 @@ document.getElementById('editor').value;");
   client.println ("}");
   client.println ("</script>");
 
-  client.println ("<div class=\"popup\" \
+
+  // https://www.w3schools.com/js/js_ajax_http_send.asp
+  
+   client.println ("<div class=\"popup\" \
 onclick=\"showEditor()\">Open editor");
 
-  client.println ("<span class=\"popuptext\" id=\"myPopup\">");
-  client.println ("<textarea id=\"editor\" rows=\"5\" \
-    method=\"get\"></textarea><br>");
+#if 1
+  client.println ("<span class=\"popuptext\" id=\"myPopup\" \
+style=\"width:560px\">");
+#else
+  client.println ("<form class=\"popuptext\" id=\"myPopup\">");
+#endif
+
+  client.println ("<textarea id=\"editor\" rows=\"9\" cols=\"20\" \
+    method=\"post\" name=\"george\" wrap=\"off\" \
+style=\"width:512px;minWidth=512px;\
+height=360px;minHeight=180px;\
+background-color=lightgrey\"></textarea><br>");
+
   client.println ("<button type=\"button\" \
 onclick=\"abandonText();\">Abandon</button>");
+
   client.println ("<button type=\"button\" \
 onclick=\"saveText();\">Save</button>");
-  client.println ("</span>");
+
+#if 0
+  client.println ("</form>");
+#else
+  //  client.println ("</span>");
+#endif
+
   client.println ("</div>");
 
+
+  
+
+  
   
 #if 0
   /********* upload form *******/
@@ -445,6 +660,7 @@ void loop() {
       if (client.available()) {     // if there's bytes to read from the client,
 	
         char c = client.read();     // read a byte, then
+	Serial.print (c);
         if (c == '\n') {            // if the byte is a newline character
           if (currentLine.length() == 0) {
             client.println("HTTP/1.1 200 OK");
@@ -453,6 +669,15 @@ void loop() {
 
 	    client.println("<style>");
 
+	    client.println (".editor{");
+	    client.println ("width: 560px;");
+	    client.println ("height: 180px;");
+	    client.println ("rows: 5;");
+	    client.println ("cols: 50;");
+	    client.println ("wrap: off;");
+	    client.println ("background-color: lightgrey;");
+	    client.println ("}");
+	    
 	    /* Popup container */
 	    client.println (".popup {");
 	    client.println ("position: relative;");
@@ -463,7 +688,8 @@ void loop() {
 /* The actual popup (appears on top) */
 	    client.println (".popup .popuptext {");
 	    client.println ("visibility: hidden;");
-	    client.println ("width: 160px;");
+	    client.println ("width: 560px;");
+	    client.println ("height: 180px;");
 	    client.println ("background-color: #555;");
 	    client.println ("color: #fff;");
 	    client.println ("text-align: center;");
@@ -472,7 +698,7 @@ void loop() {
 	    client.println ("position: absolute;");
 	    client.println ("z-index: 1;");
 	    client.println ("bottom: 125%;");
-	    client.println ("left: 50%;");
+	    client.println ("left: 30%;");
 	    client.println ("margin-left: -80px;");
 	    client.println ("}");
 
@@ -482,7 +708,7 @@ void loop() {
 	    client.println ("content: "";");
 	    client.println ("position: absolute;");
 	    client.println ("top: 100%;");
-	    client.println ("left: 50%;");
+	    client.println ("left: 30%;");
 	    client.println ("margin-left: -5px;");
 	    client.println ("border-width: 5px;");
 	    client.println ("border-style: solid;");
@@ -520,13 +746,19 @@ transparent transparent;");
             break;
           }		// if empty line
 	  else {	// non-empty line
-#if 0
-	    Serial.print ("\"");
-	    Serial.print (currentLine);
-	    Serial.println ("\"");
-#endif
+	    //	    Serial.println (currentLine);
 	    if (currentLine.startsWith("Referer:")) {
-	      {
+#define TEXTFLAG "text="
+	      String textFlag = TEXTFLAG;
+	      int textStart = currentLine.indexOf (textFlag);
+	      if (-1 != textStart) {
+#define TEXTTERM " HTTP/1.1"
+		String textTerm = TEXTFLAG;
+		int textEnd = currentLine.indexOf (textTerm);
+		String text = currentLine.substring (textStart, textEnd);
+		Serial.println (text);
+	      }
+	      else {
 		int startPos = 0;
 		parseString(jdx,    currentLine, "jdx=",    startPos);
 		parseString(jdy,    currentLine, "jdy=",    startPos);
