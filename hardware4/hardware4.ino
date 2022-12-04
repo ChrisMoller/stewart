@@ -59,29 +59,8 @@ parm_s parms[] = {
   {0.0, 0, "interval"}
 };
   
-#if 0
-uint32_t pdxHash;
-uint32_t pdyHash;
-uint32_t pdzHash;
-uint32_t prollHash;
-uint32_t ppitchHash;
-uint32_t pyawHash;
-
-uint32_t jdxHash;
-uint32_t jdyHash;
-uint32_t jdzHash;
-uint32_t jrollHash;
-uint32_t jpitchHash;
-uint32_t jyawHash0;
-
-uint32_t onsetHash;
-uint32_t orelaxHash;
-uint32_t intervalHash;
-#endif
-
-
-
-void setup() {
+void
+setup() {
   
   // check for the WiFi module:
 
@@ -111,11 +90,6 @@ void setup() {
   server.begin();    // start the web server on port 80
   
   Serial.println("Connected...");
-
-
-#ifdef DO_BLINK_TEST
-  pinMode(LED_BUILTIN, OUTPUT);
-#endif
 
   if (!SD.begin(4)) {
     Serial.println("initialization failed!");
@@ -251,21 +225,6 @@ Make sure you've formatted the card");
   Serial.println(joaat.validate_string_checksum(str, 0x5F3CC755) ? "true" : "false");
 #endif
 }
-
-#ifdef DO_BLINK_TEST
-static void
-blink (int ct)
-{
-  for (int i = 0; i < ct; i++) {
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(1000);                       // wait for a second
-    digitalWrite(LED_BUILTIN, LOW);	
-    delay(1000); 
-  }
-  delay(3000); 
-}
-#endif
-
 
 #if 0
 int
@@ -409,50 +368,6 @@ buildPage (WiFiClient client)
   initter (client, PARM_INTERVAL);
 
   client.println ("}"); // end window.onload function
-
-#if 1
-	    /**** function reloadApp(el) ****/
-	    
-  client.println ("function reloadApp(el) {");
-  client.println (" let rc;");
-  client.println ("  switch (el.id) {");
-  client.println ("  case 'position':");
-  client.println ( "   rc = window.location.origin \
-    + '?pdx='    + el.pdx.value \
-    + '&pdy='    + el.pdy.value \
-    + '&pdz='    + el.pdz.value \
-    + '&proll='  + el.proll.value \
-    + '&ppitch=' + el.ppitch.value \
-    + '&pyaw='   + el.pyaw.value;");
-  client.println ("    break;");
-
-  client.println ("  case 'jitter':");
-  client.println ( "   rc = window.location.origin \
-    + '?jdx='    + el.jdx.value \
-    + '&jdy='    + el.jdy.value \
-    + '&jdz='    + el.jdz.value \
-    + '&jroll='  + el.jroll.value \
-    + '&jpitch=' + el.jpitch.value \
-    + '&jyaw='   + el.jyaw.value;");
-  client.println ("    break;");
-
-  client.println ("  default:");	// time
-  client.println ( "   rc = window.location.origin \
-    + '?onset='    + el.onset.value \
-    + '&relax='    + el.relax.value \
-    + '&interval=' + el.interval.value;");
-  client.println ("    break;");
-
-  client.println ("  }");		// end switch
-
-  client.println ("  window.location.href = rc;");
-  client.println ("  return false;");
-  client.println ("}");
-#endif
-
-
-
-	    
 
   client.println ("function updateParam(el) {");
 
@@ -731,13 +646,11 @@ value=\"50\" class=\"slider\" id=\"pdxr\" form=\"position\" value=\"0\">");
 
 
 client.println ("<script>");
-#if 1
   client.println ("function saveText() {");
 
   client.println ("const XHR = new XMLHttpRequest();");
-  
 
-   client.println ("  var text = window.location.origin + \"?text=\" + \
+  client.println ("  var text = window.location.origin + \"?text=\" + \
 document.getElementById('editor').value;");
   client.println ("XHR.open('POST', text);");
   client.println ("XHR.setRequestHeader('Content-Type', 'text/plain');");
@@ -745,16 +658,6 @@ document.getElementById('editor').value;");
 
   client.println ("}");
  
-  
-#else
-  client.println ("function saveText() {");
-  client.println ("  var text = window.location.origin + \"?text=\" + \
-document.getElementById('editor').value;");
-  client.println ("  window.location.href = text;");
-  client.println ("  return false;");
-  client.println ("}");
-#endif
-  
   client.println ("function abandonText() {");
   client.println ("  window.location.href = window.location.origin;");
   client.println ("  return false;");
@@ -767,12 +670,8 @@ document.getElementById('editor').value;");
    client.println ("<div class=\"popup\" \
 onclick=\"showEditor()\">Open editor");
 
-#if 1
   client.println ("<span class=\"popuptext\" id=\"myPopup\" \
 style=\"width:560px\">");
-#else
-  client.println ("<form class=\"popuptext\" id=\"myPopup\">");
-#endif
 
   client.println ("<textarea id=\"editor\" rows=\"9\" cols=\"20\" \
     method=\"post\" name=\"george\" wrap=\"off\" \
@@ -785,12 +684,6 @@ onclick=\"abandonText();\">Abandon</button>");
 
   client.println ("<button type=\"button\" \
 onclick=\"saveText();\">Save</button>");
-
-#if 0
-  client.println ("</form>");
-#else
-  //  client.println ("</span>");
-#endif
 
   client.println ("</div>");
 
@@ -845,13 +738,16 @@ void loop() {
 	  else {	// non-empty line
 	    //	    Serial.println (currentLine);
 	    if (currentLine.startsWith("POST")) {
+	      Serial.println ("doing post");
 	      String startString = "update=";
 	      int startPos = currentLine.indexOf(startString);
 	      if (-1 != startPos) {
+	      Serial.println ("got startpos");
 		startPos += startString.length ();
 		String endString = "HTTP";
 		int endPos = currentLine.indexOf(endString);
 		if (-1 != endPos) {
+	      Serial.println ("got endpos");
 		  endPos--;
 		  String text = currentLine.substring (startPos, endPos);
 		  int endPos =  text.indexOf ("=");
@@ -859,7 +755,8 @@ void loop() {
 		  String vals = text.substring (1 + endPos);
 		  double val = vals.toDouble ();
 
-		  }
+		  Serial.println (val);
+		}
 	      }
 	    }
 	  }
