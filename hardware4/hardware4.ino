@@ -1,6 +1,9 @@
 #include <SPI.h>
 #include <SD.h>
 #include <WiFiNINA.h>
+#include <JOAAT.h>
+
+JOAAT joaat;
 
 #define SECRET_SSID "NETGEAR80"
 #define SECRET_PASS "magical574"
@@ -14,27 +17,72 @@ IPAddress ip;
 
 WiFiServer server(80);
 
-double pdx    = 0.0;
-double pdy    = 0.0;
-double pdz    = 0.0;
-double proll  = 0.0;
-double ppitch = 0.0;
-double pyaw   = 0.0;
+typedef struct {
+  double val;
+  uint32_t hash;
+  const char *name;
+} parm_s;
 
-double jdx    = 0.0;
-double jdy    = 0.0;
-double jdz    = 0.0;
-double jroll  = 0.0;
-double jpitch = 0.0;
-double jyaw   = 0.0;
+enum {
+  PARM_PDX,
+  PARM_PDY,
+  PARM_PDZ,
+  PARM_PROLL,
+  PARM_PPITCH,
+  PARM_PYAW,
+  PARM_JDX,
+  PARM_JDY,
+  PARM_JDZ,
+  PARM_JROLL,
+  PARM_JPITCH,
+  PARM_JYAW,
+  PARM_ONSET,
+  PARM_RELAX,
+  PARM_INTERVAL
+};
 
-double onset    = 0.0;
-double relax    = 0.0;
-double interval = 0.0;
+parm_s parms[] = {
+  {0.0, 0, "pdx"},
+  {0.0, 0, "pdy"},
+  {0.0, 0, "pdz"},
+  {0.0, 0, "proll"},
+  {0.0, 0, "ppitch"},
+  {0.0, 0, "pyaw"},
+  {0.0, 0, "jdx"},
+  {0.0, 0, "jdy"},
+  {0.0, 0, "jdz"},
+  {0.0, 0, "jroll"},
+  {0.0, 0, "jpitch"},
+  {0.0, 0, "jyaw"},
+  {0.0, 0, "onset"},
+  {0.0, 0, "relax"},
+  {0.0, 0, "interval"}
+};
+  
+#if 0
+uint32_t pdxHash;
+uint32_t pdyHash;
+uint32_t pdzHash;
+uint32_t prollHash;
+uint32_t ppitchHash;
+uint32_t pyawHash;
+
+uint32_t jdxHash;
+uint32_t jdyHash;
+uint32_t jdzHash;
+uint32_t jrollHash;
+uint32_t jpitchHash;
+uint32_t jyawHash0;
+
+uint32_t onsetHash;
+uint32_t orelaxHash;
+uint32_t intervalHash;
+#endif
+
 
 
 void setup() {
-
+  
   // check for the WiFi module:
 
   if (WiFi.status() == WL_NO_MODULE) {
@@ -176,6 +224,32 @@ Make sure you've formatted the card");
     root.close();
   }
 #endif
+
+  parms[PARM_PDX].hash 		= joaat.encode_str (JOAAT_STR ("pdx"));
+  parms[PARM_PDY].hash 		= joaat.encode_str (JOAAT_STR ("pdy"));
+  parms[PARM_PDZ].hash		= joaat.encode_str (JOAAT_STR ("pdz"));
+  parms[PARM_PROLL].hash	= joaat.encode_str (JOAAT_STR ("proll"));
+  parms[PARM_PPITCH].hash	= joaat.encode_str (JOAAT_STR ("ppitch"));
+  parms[PARM_PYAW].hash		= joaat.encode_str (JOAAT_STR ("pyaw"));
+
+  parms[PARM_JDX].hash		= joaat.encode_str (JOAAT_STR ("jdx"));
+  parms[PARM_JDY].hash		= joaat.encode_str (JOAAT_STR ("jdy"));
+  parms[PARM_JDZ].hash		= joaat.encode_str (JOAAT_STR ("jdz"));
+  parms[PARM_JROLL].hash	= joaat.encode_str (JOAAT_STR ("jroll"));
+  parms[PARM_JPITCH].hash	= joaat.encode_str (JOAAT_STR ("jpitch"));
+  parms[PARM_JYAW].hash		= joaat.encode_str (JOAAT_STR ("jyaw"));
+
+  parms[PARM_ONSET].hash	= joaat.encode_str (JOAAT_STR ("onset"));
+  parms[PARM_RELAX].hash	= joaat.encode_str (JOAAT_STR ("relax"));
+  parms[PARM_INTERVAL].hash	= joaat.encode_str (JOAAT_STR ("interval"));
+  
+#if 0
+  Serial.println("Calculated JOAAT Hash: ");
+  auto jooat_HASH = joaat.encode_str(str);
+  Serial.println(jooat_HASH, HEX);
+  Serial.println("Is JOAAT string valid: ");
+  Serial.println(joaat.validate_string_checksum(str, 0x5F3CC755) ? "true" : "false");
+#endif
 }
 
 #ifdef DO_BLINK_TEST
@@ -192,6 +266,13 @@ blink (int ct)
 }
 #endif
 
+
+#if 0
+int
+bsearch
+#endif
+
+#if 0
 void
 parseString(double &val, String currentLine, String tgt, int &startPos)
 {
@@ -211,29 +292,54 @@ parseString(double &val, String currentLine, String tgt, int &startPos)
 #endif
   }
 }
+#endif
+
+void
+initter (WiFiClient client, int idx)
+{
+  client.println ("{");
+  String holder = String (parms[idx].name) + " = "
+    + String (parms[idx].val, 2) + ";";
+  client.println (holder);
+  
+  holder = String ("if (searchParams.has('") + parms[idx].name  + "'))";
+  client.println (holder);
+
+  holder = String (parms[idx].name) + " = searchParams.get('" +
+    parms[idx].name + "');";
+  client.println (holder);
+
+  holder = String ("document.getElementById('")
+    +  parms[idx].name + "').value = "
+    + String(parms[idx].val) + ";";
+  client.println (holder);
+  client.println ("}");
+}
 
 void
 buildPage (WiFiClient client)
 {
+#if 0
 #ifdef DO_SLIDER
 #define initter(v)				\
   { \
-    String holder = String ( #v " = ") + String (v, 2); \
+    String holder = String ( v " = ") + String (v, 2); \
     client.println (holder); \
-    client.println ("if (searchParams.has('" #v "'))"); \
-    client.println ("    " #v " = searchParams.get('" #v "');"); \
-    client.println ("document.getElementById('" #v "').value = " #v ";");  \
-    client.println ("document.getElementById('" #v "r').value = " #v ";"); \
+    client.println ("if (searchParams.has(" + v "'))"); \
+    client.println ("    " v " = searchParams.get('" v "');"); \
+    client.println ("document.getElementById('" v "').value = " v ";");  \
+    client.println ("document.getElementById('" v "r').value = " v ";"); \
   }
 #else
-#define initter(v)				\
+#define initter(name,val)				\
   { \
-    String holder = String ( #v " = ") + String (v, 2); \
+    String holder = name + " = " + String (val, 2); \
     client.println (holder); \
-    client.println ("if (searchParams.has('" #v "'))"); \
-    client.println ("    " #v " = searchParams.get('" #v "');"); \
-    client.println ("document.getElementById('" #v "').value = " #v ";");  \
+    client.println ("if (searchParams.has(" + name + "))"); \
+    client.println ("    " + name + " = searchParams.get(" + name + ");"); \
+    client.println ("document.getElementById(" + name + ").value = " + String(val) + ";"); \
   }
+#endif
 #endif
   
 	    /***** scripts *******/
@@ -286,23 +392,25 @@ buildPage (WiFiClient client)
   client.println ("  const searchParams = \
  new URLSearchParams(srch);");
 
-  initter (pdx);
-  initter (pdy);
-  initter (pdz);
-  initter (proll);
-  initter (ppitch);
-  initter (pyaw);
-  initter (jdx);
-  initter (jdy);
-  initter (jdz);
-  initter (jroll);
-  initter (jpitch);
-  initter (jyaw);
-  initter (onset);
-  initter (relax);
-  initter (interval);
+  initter (client, PARM_PDX);
+  initter (client, PARM_PDY);
+  initter (client, PARM_PDZ);
+  initter (client, PARM_PROLL);
+  initter (client, PARM_PPITCH);
+  initter (client, PARM_PYAW);
+  initter (client, PARM_JDX);
+  initter (client, PARM_JDY);
+  initter (client, PARM_JDZ);
+  initter (client, PARM_JROLL);
+  initter (client, PARM_JPITCH);
+  initter (client, PARM_JYAW);
+  initter (client, PARM_ONSET);
+  initter (client, PARM_RELAX);
+  initter (client, PARM_INTERVAL);
+
   client.println ("}"); // end window.onload function
 
+#if 1
 	    /**** function reloadApp(el) ****/
 	    
   client.println ("function reloadApp(el) {");
@@ -340,6 +448,7 @@ buildPage (WiFiClient client)
   client.println ("  window.location.href = rc;");
   client.println ("  return false;");
   client.println ("}");
+#endif
 
 
 
@@ -347,6 +456,7 @@ buildPage (WiFiClient client)
 
   client.println ("function updateParam(el) {");
 
+  client.println ("console.log('in uP');");
   client.println ("const XHR = new XMLHttpRequest();");
 
 #if 0
@@ -482,7 +592,7 @@ el.id + \"=\" + el.value;");
   client.println ("<td style=\"text-align:right\">"); \
   client.println (  "<input type=\"number\" id=\"" #id"\" step=\"" #stp "\" onchange=\"updateParam(this);\" onkeypress=\"return keyHandler(this);\" min=\"0\">"); \
   client.println ("</td>")
-
+  
 	    /**** position form ****/
 
   client.println ("<div>");			// start position form
@@ -734,39 +844,26 @@ void loop() {
           }		// if empty line
 	  else {	// non-empty line
 	    //	    Serial.println (currentLine);
-	    if (currentLine.startsWith("Referer:")) {
-	      {
-		int startPos = 0;
-		parseString(jdx,    currentLine, "jdx=",    startPos);
-		parseString(jdy,    currentLine, "jdy=",    startPos);
-		parseString(jdz,    currentLine, "jdz=",    startPos);
-		parseString(jroll,  currentLine, "jroll=",  startPos);
-		parseString(jpitch, currentLine, "jpitch=", startPos);
-		parseString(jyaw,   currentLine, "jyaw=",   startPos);
-		startPos = 0;
-		parseString(pdx,    currentLine, "pdx=",    startPos);
-		parseString(pdy,    currentLine, "pdy=",    startPos);
-		parseString(pdz,    currentLine, "pdz=",    startPos);
-		parseString(proll,  currentLine, "proll=",  startPos);
-		parseString(ppitch, currentLine, "ppitch=", startPos);
-		parseString(pyaw,   currentLine, "pyaw=",   startPos);
-#ifdef DO_BLINK_TEST
-		if (!isnan (jdx) &&
-		    !isnan (jdy) &&
-		    !isnan (jdz) &&
-		    !isnan (jroll) &&
-		    !isnan (jpitch) &&
-		    !isnan (jyaw)
-		    ) {
-		  blink ((int)fabs (jdx));
-		  blink ((int)fabs (jdy));
-		  blink ((int)fabs (jdz));
-		}
-#endif
-	      }		// if not editor
-	    }			// if Referer
-	    currentLine = "";
-	  }			// non empty line
+	    if (currentLine.startsWith("POST")) {
+	      String startString = "update=";
+	      int startPos = currentLine.indexOf(startString);
+	      if (-1 != startPos) {
+		startPos += startString.length ();
+		String endString = "HTTP";
+		int endPos = currentLine.indexOf(endString);
+		if (-1 != endPos) {
+		  endPos--;
+		  String text = currentLine.substring (startPos, endPos);
+		  int endPos =  text.indexOf ("=");
+		  String vbl = text.substring (0, endPos);
+		  String vals = text.substring (1 + endPos);
+		  double val = vals.toDouble ();
+
+		  }
+	      }
+	    }
+	  }
+	  currentLine = "";
         }			// if '\n'
 	else if (c != '\r') {
           currentLine += c;      // add it to the end of the currentLine
