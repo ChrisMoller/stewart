@@ -23,45 +23,90 @@ typedef struct {
   const char *name;
 } parm_s;
 
-enum {
-  PARM_PDX,
-  PARM_PDY,
-  PARM_PDZ,
-  PARM_PROLL,
-  PARM_PPITCH,
-  PARM_PYAW,
-  PARM_JDX,
-  PARM_JDY,
-  PARM_JDZ,
-  PARM_JROLL,
-  PARM_JPITCH,
-  PARM_JYAW,
-  PARM_ONSET,
-  PARM_RELAX,
-  PARM_INTERVAL
+const char * lbls[] = {
+  "pdx",
+  "pdy",
+  "pdz",
+  "proll",
+  "ppitch",
+  "pyaw",
+  "jdx",
+  "jdy",
+  "jdz",
+  "jroll",
+  "jpitch",
+  "jyaw",
+  "onset",
+  "relax",
+  "interval"
 };
 
-parm_s parms[] = {
-  {0.0, 0, "pdx"},
-  {0.0, 0, "pdy"},
-  {0.0, 0, "pdz"},
-  {0.0, 0, "proll"},
-  {0.0, 0, "ppitch"},
-  {0.0, 0, "pyaw"},
-  {0.0, 0, "jdx"},
-  {0.0, 0, "jdy"},
-  {0.0, 0, "jdz"},
-  {0.0, 0, "jroll"},
-  {0.0, 0, "jpitch"},
-  {0.0, 0, "jyaw"},
-  {0.0, 0, "onset"},
-  {0.0, 0, "relax"},
-  {0.0, 0, "interval"}
-};
+size_t lbl_cnt = sizeof(lbls)/sizeof(char *);
+
+parm_s *parms = nullptr;
+
+int cmp_parm (void *s1, void * s2)
+{
+  uint32_t a = ((parm_s *)s1)->hash;
+  uint32_t b = ((parm_s *)s2)->hash;
+  return (a == b) ? 0
+    : ((a < b) ? -1 : 1);
+}
+
+
+int cmp_parm_str (const void *s1, const void *s2)
+{
+  union {
+    const void *v;
+    struct {
+      uint32_t m;
+      uint32_t l;
+    }u;
+  } a_u;
+  a_u.v = s1;
+  uint32_t a = a_u.u.m;
+  uint32_t b = ((parm_s *)s2)->hash;
   
-void
-setup() {
-  
+  return (a == b) ? 0
+    : ((a < b) ? -1 : 1);
+}
+
+
+void swap(void* v1, void* v2, int size)
+{
+  char buffer[size];
+  memcpy(buffer, v1, size);
+  memcpy(v1, v2, size);
+  memcpy(v2, buffer, size);
+}
+
+void qsort(void* v, int size, int left, int right,
+      int (*comp)(void*, void*))
+{
+  void *vt, *v3;
+  int i, last, mid = (left + right) / 2;
+  if (left >= right)
+    return;
+
+  void* vl = (char*)(v + (left * size));
+  void* vr = (char*)(v + (mid * size));
+  swap(vl, vr, size);
+  last = left;
+  for (i = left + 1; i <= right; i++) {
+    vt = (char*)(v + (i * size));
+    if ((*comp)(vl, vt) > 0) {
+      ++last;
+      v3 = (char*)(v + (last * size));
+      swap(vt, v3, size);
+    }
+  }
+  v3 = (char*)(v + (last * size));
+  swap(vl, v3, size);
+  qsort(v, size, left, last - 1, comp);
+  qsort(v, size, last + 1, right, comp);
+}	
+
+void setup() {
   // check for the WiFi module:
 
   if (WiFi.status() == WL_NO_MODULE) {
@@ -92,169 +137,43 @@ setup() {
   Serial.println("Connected...");
 
   if (!SD.begin(4)) {
-    Serial.println("initialization failed!");
+    Serial.println("SD initialization failed!");
     while (1);
   }
 
-#if 0
-  File myFile = SD.open("test.txt", FILE_WRITE);
-  
-  if (myFile) {
-    Serial.print("Writing to test.txt...");
-    myFile.println("testing 1, 2, 3.");
-    // close the file:
-    myFile.close();
-    Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
+  parms = (parm_s *)malloc (sizeof(parm_s) * lbl_cnt);
+  for (int i = 0; i < lbl_cnt; i++) {
+    parms[i].val  = 0.0;
+    parms[i].hash = joaat.encode_str (JOAAT_STR (lbls[i]));
+    parms[i].name = lbls[i];
   }
 
-  myFile = SD.open("test.txt");
-  if (myFile) {
-    Serial.println("test.txt:");
-     
-    // read from the file until there's nothing else in it:
-    while (myFile.available()) {
-      Serial.write(myFile.read());
-    }
-    // close the file:
-    myFile.close();
-    SD.remove("test.txt");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
+  qsort (parms, sizeof(parm_s), 0, lbl_cnt - 1, cmp_parm);
 
-  Sd2Card card;
-  SdVolume volume;
-  SdFile root;
-
-  const int chipSelect = 4;
-
-  if (!card.init(SPI_HALF_SPEED, chipSelect)) {
-    Serial.println("no go");
-  }
-  else {
-    Serial.print("Card type:         ");
-    switch (card.type()) {
-    case SD_CARD_TYPE_SD1:
-      Serial.println("SD1");
-      break;
-    case SD_CARD_TYPE_SD2:
-      Serial.println("SD2");
-      break;
-    case SD_CARD_TYPE_SDHC:
-      Serial.println("SDHC");
-      break;
-    default:
-      Serial.println("Unknown");
-    }
-	
-    if (!volume.init(card)) {
-      Serial.println("Could not find FAT16/FAT32 partition.\n\
-Make sure you've formatted the card");
-      while (1);
-    }
-	
-    Serial.print("Clusters:          ");
-    Serial.println(volume.clusterCount());
-    
-    Serial.print("Blocks x Cluster:  ");
-    Serial.println(volume.blocksPerCluster());
-	
-    Serial.print("Total Blocks:      ");
-    Serial.println(volume.blocksPerCluster() * volume.clusterCount());
-	
-    Serial.println();
-	
-    uint32_t volumesize;
-
-    Serial.print("Volume type is:    FAT");
-    Serial.println(volume.fatType(), DEC);
-    volumesize = volume.blocksPerCluster();  
-    volumesize *= volume.clusterCount();    
-    volumesize /= 2; // SD card blocks are always 512 bytes (2 blocks are 1KB)
-
-    Serial.print("Volume size (Kb):  ");
-    Serial.println(volumesize);
-	
-    Serial.print("Volume size (Mb):  ");
-    volumesize /= 1024;
-    Serial.println(volumesize);
-	
-    Serial.print("Volume size (Gb):  ");
-    Serial.println((float)volumesize / 1024.0);
-	
-    Serial.println("\nFiles found on the card \
-(name, date and size in bytes): ");
-	
-    root.openRoot(volume);
-	
-    // list all files in the card with date and size
-    
-    root.ls(LS_R | LS_DATE | LS_SIZE);
-    
-    root.close();
-  }
-#endif
-
-  parms[PARM_PDX].hash 		= joaat.encode_str (JOAAT_STR ("pdx"));
-  parms[PARM_PDY].hash 		= joaat.encode_str (JOAAT_STR ("pdy"));
-  parms[PARM_PDZ].hash		= joaat.encode_str (JOAAT_STR ("pdz"));
-  parms[PARM_PROLL].hash	= joaat.encode_str (JOAAT_STR ("proll"));
-  parms[PARM_PPITCH].hash	= joaat.encode_str (JOAAT_STR ("ppitch"));
-  parms[PARM_PYAW].hash		= joaat.encode_str (JOAAT_STR ("pyaw"));
-
-  parms[PARM_JDX].hash		= joaat.encode_str (JOAAT_STR ("jdx"));
-  parms[PARM_JDY].hash		= joaat.encode_str (JOAAT_STR ("jdy"));
-  parms[PARM_JDZ].hash		= joaat.encode_str (JOAAT_STR ("jdz"));
-  parms[PARM_JROLL].hash	= joaat.encode_str (JOAAT_STR ("jroll"));
-  parms[PARM_JPITCH].hash	= joaat.encode_str (JOAAT_STR ("jpitch"));
-  parms[PARM_JYAW].hash		= joaat.encode_str (JOAAT_STR ("jyaw"));
-
-  parms[PARM_ONSET].hash	= joaat.encode_str (JOAAT_STR ("onset"));
-  parms[PARM_RELAX].hash	= joaat.encode_str (JOAAT_STR ("relax"));
-  parms[PARM_INTERVAL].hash	= joaat.encode_str (JOAAT_STR ("interval"));
-  
-#if 0
-  Serial.println("Calculated JOAAT Hash: ");
-  auto jooat_HASH = joaat.encode_str(str);
-  Serial.println(jooat_HASH, HEX);
-  Serial.println("Is JOAAT string valid: ");
-  Serial.println(joaat.validate_string_checksum(str, 0x5F3CC755) ? "true" : "false");
-#endif
 }
 
-#if 0
-int
-bsearch
-#endif
-
-#if 0
-void
-parseString(double &val, String currentLine, String tgt, int &startPos)
+void *bsearch (const void *key, const void *base0,
+	       size_t nmemb, size_t size,
+	       int (*compar)(const void *, const void *))
 {
-  double rc = NAN;
-  int foundPos;
-  if (-1 != (foundPos = currentLine.indexOf(tgt, startPos))) {
-    int endPos = foundPos + tgt.length ();
-    for (;endPos < currentLine.length(); endPos++) 
-      if (!isDigit(currentLine.charAt(endPos)) &&
-	  currentLine.charAt(endPos) != '-' &&
-	  currentLine.charAt(endPos) != '.' ) break;
-    String vv = currentLine.substring(foundPos+tgt.length (), endPos);
-    rc = atof(vv.c_str());
-    if (!isnan (rc)) val = rc;
-#if 0
-    Serial.print(tgt); Serial.println(val);
-#endif
-  }
-}
-#endif
+  const char *base = (const char *) base0;
+  int lim, cmp;
+  const void *p;
 
-void
-initter (WiFiClient client, int idx)
+  for (lim = nmemb; lim != 0; lim >>= 1) {
+    p = base + (lim >> 1) * size;
+    cmp = (*compar)(key, p);
+    if (cmp == 0)
+      return (void *)p;
+    if (cmp > 0) {	/* key > p: move right */
+      base = (const char *)p + size;
+      lim--;
+    } /* else move left */
+  }
+  return (NULL);
+}
+
+void initter (WiFiClient client, int idx)
 {
   client.println ("{");
   String holder = String (parms[idx].name) + " = "
@@ -275,31 +194,8 @@ initter (WiFiClient client, int idx)
   client.println ("}");
 }
 
-void
-buildPage (WiFiClient client)
+void buildPage (WiFiClient client)
 {
-#if 0
-#ifdef DO_SLIDER
-#define initter(v)				\
-  { \
-    String holder = String ( v " = ") + String (v, 2); \
-    client.println (holder); \
-    client.println ("if (searchParams.has(" + v "'))"); \
-    client.println ("    " v " = searchParams.get('" v "');"); \
-    client.println ("document.getElementById('" v "').value = " v ";");  \
-    client.println ("document.getElementById('" v "r').value = " v ";"); \
-  }
-#else
-#define initter(name,val)				\
-  { \
-    String holder = name + " = " + String (val, 2); \
-    client.println (holder); \
-    client.println ("if (searchParams.has(" + name + "))"); \
-    client.println ("    " + name + " = searchParams.get(" + name + ");"); \
-    client.println ("document.getElementById(" + name + ").value = " + String(val) + ";"); \
-  }
-#endif
-#endif
   
 	    /***** scripts *******/
 
@@ -351,21 +247,8 @@ buildPage (WiFiClient client)
   client.println ("  const searchParams = \
  new URLSearchParams(srch);");
 
-  initter (client, PARM_PDX);
-  initter (client, PARM_PDY);
-  initter (client, PARM_PDZ);
-  initter (client, PARM_PROLL);
-  initter (client, PARM_PPITCH);
-  initter (client, PARM_PYAW);
-  initter (client, PARM_JDX);
-  initter (client, PARM_JDY);
-  initter (client, PARM_JDZ);
-  initter (client, PARM_JROLL);
-  initter (client, PARM_JPITCH);
-  initter (client, PARM_JYAW);
-  initter (client, PARM_ONSET);
-  initter (client, PARM_RELAX);
-  initter (client, PARM_INTERVAL);
+  for (int i = 0; i < lbl_cnt; i++)
+    initter (client, i);
 
   client.println ("}"); // end window.onload function
 
@@ -373,20 +256,6 @@ buildPage (WiFiClient client)
 
   client.println ("console.log('in uP');");
   client.println ("const XHR = new XMLHttpRequest();");
-
-#if 0
-  client.println ("XHR.onload = function() {");
-  client.println ("  alert(`Loaded: ${XHR.status} ${XHR.response}`);");
-  client.println ("};");
-
-  client.println ("XHR.onerror = function() {");
-  client.println ("  alert(`Network Error`);");
-  client.println ("};");
-
-  client.println ("XHR.onprogress = function(event) {");
-  client.println ("  alert(`Received ${event.loaded} of ${event.total}`);");
-  client.println ("};");
-#endif
 
   client.println ("  var text = window.location.origin + \"?update=\" + \
 el.id + \"=\" + el.value;");
@@ -742,12 +611,12 @@ void loop() {
 	      String startString = "update=";
 	      int startPos = currentLine.indexOf(startString);
 	      if (-1 != startPos) {
-	      Serial.println ("got startpos");
+		Serial.println ("got startpos");
 		startPos += startString.length ();
 		String endString = "HTTP";
 		int endPos = currentLine.indexOf(endString);
 		if (-1 != endPos) {
-	      Serial.println ("got endpos");
+		  Serial.println ("got endpos");
 		  endPos--;
 		  String text = currentLine.substring (startPos, endPos);
 		  int endPos =  text.indexOf ("=");
@@ -755,7 +624,12 @@ void loop() {
 		  String vals = text.substring (1 + endPos);
 		  double val = vals.toDouble ();
 
-		  Serial.println (val);
+		  uint32_t hash = joaat.encode_str (JOAAT_STR (vbl.c_str ()));
+		  void *res = bsearch (reinterpret_cast<void *>(hash), parms,
+			 lbl_cnt, sizeof(parm_s), cmp_parm_str);
+		  if (res != nullptr) {
+		    ((parm_s *)res)->val = val;
+		  }
 		}
 	      }
 	    }
