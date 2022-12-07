@@ -242,7 +242,7 @@ void buildPage (WiFiClient client)
 
 /* scripts are Javascript routines that do stuff */
 
-  client.println ("<script>");
+  client.println (F("<script>"));
 
   
   /********** showEditor *****/
@@ -252,10 +252,10 @@ user edit it.  The edited result can be saved for later use as a again as
 a phantom-specific behaviour. */
 
   // When the user clicks on div, open the popup
-  client.println ("function showEditor() {");
-  client.println ("  var popup = document.getElementById(\"myPopup\");");
-  client.println ("  popup.classList.add(\"show\");");
-  client.println ("  var text = document.getElementById('editor')");
+  client.println (F("function showEditor() {"));
+  client.println (F("  var popup = document.getElementById(\"myPopup\");"));
+  client.println (F("  popup.classList.add(\"show\");"));
+  client.println (F("  var text = document.getElementById('editor')"));
   client.println ("  text.value = \
 '{\\n' + \
 '  \"name\": \"\",\\n' + \
@@ -286,10 +286,9 @@ a phantom-specific behaviour. */
 
 /* immediately the web page is built, initialise the values of HTML entities */
 
-  client.println ("window.onload = function () {");
-  client.println ("  let srch = window.location.search;");
-  client.println ("  const searchParams = \
- new URLSearchParams(srch);");
+  client.println (F("window.onload = function () {"));
+  client.println (F("  let srch = window.location.search;"));
+  client.println (F("  const searchParams =  new URLSearchParams(srch);"));
 
   for (int i = 0; i < lbl_cnt; i++)
     initter (client, i);
@@ -302,15 +301,15 @@ a phantom-specific behaviour. */
 
 /* send data from the web page to the Arguino */
   
-  client.println ("function updateParam(el) {");
+  client.println (F("function updateParam(el) {"));
 
-  client.println ("const XHR = new XMLHttpRequest();");
+  client.println (F("const XHR = new XMLHttpRequest();"));
 
   client.println ("  var text = window.location.origin + \"?update=\" + \
 el.id + \"=\" + el.value;");
-  client.println ("XHR.open('POST', text);");
-  client.println ("XHR.setRequestHeader('Content-Type', 'text/plain');");
-  client.println ("XHR.send();");
+  client.println (F("XHR.open('POST', text);"));
+  client.println (F("XHR.setRequestHeader('Content-Type', 'text/plain');"));
+  client.println (F("XHR.send();"));
 
   client.println ("}");
 
@@ -321,12 +320,12 @@ el.id + \"=\" + el.value;");
 arrows clicked, or numbers pounded in followed by an "enter" keypress.  This
 handles the enter key. */
 
-  client.println ("function keyHandler(el) {");
-  client.println ("  if (event.keyCode=='13'){");
-  client.println ("    updateParam (el);");
-  client.println ("    return false;");
-  client.println ("  }");
-  client.println ("  return true;");
+  client.println (F("function keyHandler(el) {"));
+  client.println (F("  if (event.keyCode=='13'){"));
+  client.println (F("    updateParam (el);"));
+  client.println (F("    return false;"));
+  client.println (F("  }"));
+  client.println (F("  return true;"));
   client.println ("}");
 	    
   
@@ -340,72 +339,73 @@ handles the enter key. */
 
   client.println("<style>");
 
-  client.println (".editor{");
-  client.println ("width: 560px;");
-  client.println ("height: 180px;");
-  client.println ("rows: 5;");
-  client.println ("cols: 50;");
-  client.println ("wrap: off;");
-  client.println ("background-color: lightgrey;");
+  client.println (F(".editor{"));
+  client.println (F("  width: 560px;"));
+  client.println (F("  height: 180px;"));
+  client.println (F("  rows: 5;"));
+  client.println (F("  cols: 50;"));
+  client.println (F("  wrap: off;"));
+  client.println (F("  background-color: lightgrey;"));
   client.println ("}");
 	    
 	    /* Popup container */
-  client.println (".popup {");
-  client.println ("position: relative;");
-  client.println ("display: inline-block;");
-  client.println ("cursor: pointer;");
+  client.println (F(".popup {"));
+  client.println (F("  position: relative;"));
+  client.println (F("  display: inline-block;"));
+  client.println (F("  cursor: pointer;"));
   client.println ("}");
 
 /* The actual popup (appears on top) */
-  client.println (".popup .popuptext {");
-  client.println ("visibility: hidden;");
-  client.println ("width: 560px;");
-  client.println ("height: 180px;");
-  client.println ("background-color: #555;");
-  client.println ("color: #fff;");
-  client.println ("text-align: center;");
-  client.println ("border-radius: 6px;");
-  client.println ("padding: 8px 0;");
-  client.println ("position: absolute;");
-  client.println ("z-index: 1;");
-  client.println ("bottom: 125%;");
-  client.println ("left: 30%;");
-  client.println ("margin-left: -80px;");
+  client.println (F(".popup .popuptext {"));
+  client.println (F("  visibility: hidden;"));
+  client.println (F("  width: 560px;"));
+  client.println (F("  height: 180px;"));
+  client.println (F("  background-color: #555;"));
+  client.println (F("  color: #fff;"));
+  client.println (F("  text-align: center;"));
+  client.println (F("  border-radius: 6px;"));
+  client.println (F("  padding: 8px 0;"));
+  client.println (F("  position: absolute;"));
+  client.println (F("  z-index: 1;"));
+  client.println (F("  bottom: 125%;"));
+  client.println (F("  left: 30%;"));
+  client.println (F("  margin-left: -80px;"));
   client.println ("}");
 
 
 /* Popup arrow */
-  client.println (".popup .popuptext::after {");
-  client.println ("content: "";");
-  client.println ("position: absolute;");
-  client.println ("top: 100%;");
-  client.println ("left: 30%;");
-  client.println ("margin-left: -5px;");
-  client.println ("border-width: 5px;");
-  client.println ("border-style: solid;");
-  client.println ("border-color: #555 transparent transparent transparent;");
+  client.println (F(".popup .popuptext::after {"));
+  client.println (F("  content: "";"));
+  client.println (F("  position: absolute;"));
+  client.println (F("  top: 100%;"));
+  client.println (F("  left: 30%;"));
+  client.println (F("  margin-left: -5px;"));
+  client.println (F("  border-width: 5px;"));
+  client.println (F("  border-style: solid;"));
+  client.println (F("  border-color: #555 transparent \
+transparent transparent;"));
   client.println ("}");
 
 /* Toggle this class when clicking on the
    popup container (hide and show the popup) */
-  client.println (".popup .show {");
-  client.println ("visibility: visible;");
+  client.println (F(".popup .show {"));
+  client.println (F("  visibility: visible;"));
   client.println ("}");
 
 
   client.println("th, td {");
-  client.println("  padding-top: 0px;");
-  client.println("  padding-bottom: 0px;");
-  client.println("  padding-left: 10px;");
-  client.println("  padding-right: 0px;");
+  client.println(F("  padding-top: 0px;"));
+  client.println(F("  padding-bottom: 0px;"));
+  client.println(F("  padding-left: 10px;"));
+  client.println(F("  padding-right: 0px;"));
   client.println("}");
   
-  client.println("div {");
-  client.println("width: 820px;");
-  client.println("background-color: lightgrey;");
-  client.println("border: 15px lightgrey;");
-  client.println("padding: 15px;");
-  client.println("margin: 20px;");
+  client.println(F("div {"));
+  client.println(F("  width: 820px;"));
+  client.println(F("  background-color: lightgrey;"));
+  client.println(F("  border: 15px lightgrey;"));
+  client.println(F("  padding: 15px;"));
+  client.println(F("  margin: 20px;"));
   client.println("}");
   
   client.println("</style>");
@@ -415,7 +415,7 @@ handles the enter key. */
 
 	    /*** begin page ****/
 	    
-  client.println ("<h1>Stewart</h2>");
+  client.println (F("<h1>Stewart</h2>"));
 	    
 	    
 	    /****  forms ****/
@@ -442,112 +442,112 @@ frustration and you're to young to be bald. */
   
 	    /**** position form ****/
 
-  client.println ("<div>");			// start position form
-  client.println ("<h2>Position</h2>");
+  client.println (F("<div>"));			// start position form
+  client.println (F("<h2>Position</h2>"));
 
-  client.println ("<form id=\"position\" method=\"get\">");
+  client.println (F("<form id=\"position\" method=\"get\">"));
 
-  client.println ("<table>");
+  client.println (F("<table>"));
 
-  client.println ("  <tr>");		// start pos offset row
+  client.println (F("  <tr>"));		// start pos offset row
 
-  client.println ("    <td style=\"text-align:right\">");
-  client.println ("(cm)");
-  client.println ("    </td>");
+  client.println (F("    <td style=\"text-align:right\">"));
+  client.println (F("(cm)"));
+  client.println (F("    </td>"));
 
   BUILD_ETY (pdx, dx, 0.1, position);
   BUILD_ETY (pdy, dy, 0.1, position);
   BUILD_ETY (pdz, dz, 0.1, position);
 
-  client.println ("  </tr>");		// end pos offset row
+  client.println (F("  </tr>"));		// end pos offset row
   
-  client.println ("  <tr>");		// start pos attitude row
+  client.println (F("  <tr>"));		// start pos attitude row
 
-  client.println ("    <td style=\"text-align:right\">");
-  client.println ("(deg)");
-  client.println ("    </td>");
+  client.println (F("    <td style=\"text-align:right\">"));
+  client.println (F("(deg)"));
+  client.println (F("    </td>"));
 	    
   BUILD_ETY (proll,  roll,  1.0, position);
   BUILD_ETY (ppitch, pitch, 1.0, position);
   BUILD_ETY (pyaw,   yaw,   1.0, position);
   
-  client.println ("  </tr>");		// end pos attitude row
+  client.println (F("  </tr>"));		// end pos attitude row
 
-  client.println ("</table>");
+  client.println (F("</table>"));
 
-  client.print("</form>");
+  client.println (F("</form>"));
 
-  client.println ("</div>");		// end position form
+  client.println (F("</div>"));		// end position form
 	    
 
 
 	    /**** jitter form ****/
 
-  client.println ("<div>");		// start jitter form
-  client.println ("<h2>Jitter</h2>");
+  client.println (F("<div>"));		// start jitter form
+  client.println (F("<h2>Jitter</h2>"));
 	    
-  client.println ("<form id=\"jitter\" method=\"get\">");
+  client.println F(("<form id=\"jitter\" method=\"get\">"));
 	    
-  client.println ("<table>");
+  client.println (F("<table>"));
   
-  client.println ("  <tr>");
+  client.println (F("  <tr>"));
 
-  client.println ("    <td style=\"text-align:right\">");
-  client.println ("(cm)");
-  client.println ("    </td>");
+  client.println (F("    <td style=\"text-align:right\">"));
+  client.println (F("(cm)"));
+  client.println (F("    </td>"));
 
   BUILD_ETY (jdx, dx, 0.1, jitter);
   BUILD_ETY (jdy, dy, 0.1, jitter);
   BUILD_ETY (jdz, dz, 0.1, jitter);
   
-  client.println ("  </tr>");
+  client.println (F("  </tr>"));
 
-  client.println ("  <tr>");
+  client.println (F("  <tr>"));
 
-  client.println ("    <td style=\"text-align:right\">");
-  client.println ("(deg)");
-  client.println ("    </td>");
+  client.println (F("    <td style=\"text-align:right\">"));
+  client.println (F("(deg)"));
+  client.println (F("    </td>"));
 
   BUILD_ETY (jroll,  roll,  1.0, jitter);
   BUILD_ETY (jpitch, pitch, 1.0, jitter);
   BUILD_ETY (jyaw,   yaw,   1.0, jitter);
   
-  client.println ("  </tr>");
+  client.println (F("  </tr>"));
   
-  client.println ("</table>");
+  client.println (F("</table>"));
 	 
-  client.println ("</form>");
+  client.println (F("</form>"));
   
-  client.println ("</div>");		// end jitter form
+  client.println (F("</div>"));		// end jitter form
   
 
 
 	    /**** time form ****/
 
-  client.println ("<div>");
-  client.println ("<h2>Time</h2>");
+  client.println (F("<div>"));
+  client.println (F("<h2>Time</h2>"));
 	    
-  client.println ("<form id=\"time\" method=\"get\">");
+  client.println (F("<form id=\"time\" method=\"get\">"));
 	    
-  client.println ("<table>");
+  client.println (F("<table>"));
 
-  client.println ("  <tr>");
+  client.println (F("  <tr>"));
 
-  client.println ("    <td style=\"text-align:right\">");
-  client.println ("(secs)");
-  client.println ("    </td>");
+  client.println (F("    <td style=\"text-align:right\">"));
+  client.println (F("(secs)"));
+  client.println (F("    </td>"));
 
   BUILD_ETYM (onset,    onset,    0.1, time);
   BUILD_ETYM (relax,    relax,    0.1, time);
   BUILD_ETYM (interval, interval, 0.1, time);
 
-  client.println ("  </tr>");
+  client.println (F("  </tr>"));
 
-  client.println ("</table>");
+  client.println (F("</table>"));
 
-  client.println("</form>");
+  client.println(F("</form>"));
 
-  client.println ("</div>");		// end time form
+  client.println (F("</div>"));		// end time form
 
 
 	    /**** editor popup ****/
@@ -563,49 +563,49 @@ frustration and you're to young to be bald. */
 
 /* Javascript to send editor data to the Arduino */
 
-  client.println ("<script>");
-  client.println ("function saveText() {");
+  client.println (F("<script>"));
+  client.println (F("function saveText() {"));
 
-  client.println ("const XHR = new XMLHttpRequest();");
+  client.println (F("const XHR = new XMLHttpRequest();"));
 
   client.println ("  var text = window.location.origin + \"?text=\" + \
 document.getElementById('editor').value;");
-  client.println ("XHR.open('POST', text);");
-  client.println ("XHR.setRequestHeader('Content-Type', 'text/plain');");
-  client.println ("XHR.send();");
+  client.println (F("XHR.open('POST', text);"));
+  client.println (F("XHR.setRequestHeader('Content-Type', 'text/plain');"));
+  client.println (F("XHR.send();"));
 
-  client.println ("}");
+  client.println (F("}"));
  
 /* Javascript to just close the editor window */
 
-  client.println ("function abandonText() {");
-  client.println ("  window.location.href = window.location.origin;");
-  client.println ("  return false;");
-  client.println ("}");
-  client.println ("</script>");
+  client.println (F("function abandonText() {"));
+  client.println (F("  window.location.href = window.location.origin;"));
+  client.println (F("  return false;"));
+  client.println (F("}"));
+  client.println (F("</script>"));
 
 
 /* code to put the editor window and controls up */
 
-   client.println ("<div class=\"popup\" \
-onclick=\"showEditor()\">Open editor");
+   client.println (F("<div class=\"popup\" \
+onclick=\"showEditor()\">Open editor"));
 
-  client.println ("<span class=\"popuptext\" id=\"myPopup\" \
-style=\"width:560px\">");
+  client.println (F("<span class=\"popuptext\" id=\"myPopup\" \
+style=\"width:560px\">"));
 
-  client.println ("<textarea id=\"editor\" rows=\"9\" cols=\"20\" \
+  client.println (F("<textarea id=\"editor\" rows=\"9\" cols=\"20\" \
     method=\"post\" name=\"george\" wrap=\"off\" \
 style=\"width:512px;minWidth=512px;\
 height=360px;minHeight=180px;\
-background-color=lightgrey\"></textarea><br>");
+background-color=lightgrey\"></textarea><br>"));
 
-  client.println ("<button type=\"button\" \
-onclick=\"abandonText();\">Abandon</button>");
+  client.println (F("<button type=\"button\" \
+onclick=\"abandonText();\">Abandon</button>"));
 
-  client.println ("<button type=\"button\" \
-onclick=\"saveText();\">Save</button>");
+  client.println (F("<button type=\"button\" \
+onclick=\"saveText();\">Save</button>"));
 
-  client.println ("</div>");
+  client.println (F("</div>"));
 
 
   
@@ -673,7 +673,7 @@ void setup()
   
   Serial.println("Connected...");
 
-#if 0
+#if 1
   if (!SD.begin(4)) {
     Serial.println("SD initialization failed!");
     while (1);
