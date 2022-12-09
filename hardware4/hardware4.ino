@@ -8,7 +8,7 @@ the parameters, and it interprets the parameters to control
 the servos.  The broswer side runs a web page with the controls.
 The Arduino side is coded in a subset of C++; the browser side
 is in a mix of Javascript and HTML.  In the code below,
-srgument strings to client.print () calls are the HTML and
+argument strings to client.print () calls are the HTML and
 Javascript being served to the browser.
 					     
 #endif
@@ -245,43 +245,6 @@ void buildPage (WiFiClient client)
   client.println (F("<script>"));
 
   
-  /********** showEditor *****/
-
-/* formats parameter data into a decent human-readable form and lets the
-user edit it.  The edited result can be saved for later use as a again as
-a phantom-specific behaviour. */
-
-  // When the user clicks on div, open the popup
-  client.println (F("function showEditor() {"));
-  client.println (F("  var popup = document.getElementById(\"myPopup\");"));
-  client.println (F("  popup.classList.add(\"show\");"));
-  client.println (F("  var text = document.getElementById('editor')"));
-  client.println ("  text.value = \
-'{\\n' + \
-'  \"name\": \"\",\\n' + \
-'  \"position\": [ ' + \
-'\"dx\": \"'    + position.pdx.value + '\", ' + \
-'\"dy\": \"'    + position.pdy.value + '\", ' + \
-'\"dz\": \"'    + position.pdz.value + '\",\\n ' + \
-'    \"roll\": \"'  + position.proll.value + '\", ' + \
-'\"pitch\": \"' + position.ppitch.value + '\", ' + \
-'\"yaw\": \"'   + position.pyaw.value + '\"],\\n ' + \
-'  \"jitter\": [ ' + \
-'\"dx\": \"'    + jitter.jdx.value + '\", ' + \
-'\"dy\": \"'    + jitter.jdy.value + '\", ' + \
-'\"dz\": \"'    + jitter.jdz.value + '\",\\n ' + \
-'    \"roll\": \"'  + jitter.jroll.value + '\", ' + \
-'\"pitch\": \"' + jitter.jpitch.value + '\", ' + \
-'\"yaw\": \"'   + jitter.jyaw.value + '\"],\\n ' + \
-'  \"time\": [ ' + \
-'\"onset\": \"'    + time.onset.value + '\", ' + \
-'\"relax\": \"'    + time.relax.value + '\", ' + \
-'\"interval\": \"' + time.interval.value + '\"]\\n ' + \
-'}';");
-  client.println ("}");
-
-
-  
   /********** window.onload *****/
 
 /* immediately the web page is built, initialise the values of HTML entities */
@@ -338,60 +301,6 @@ handles the enter key. */
 /* styles control what the HTML looks like */
 
   client.println("<style>");
-
-  client.println (F(".editor{"));
-  client.println (F("  width: 560px;"));
-  client.println (F("  height: 180px;"));
-  client.println (F("  rows: 5;"));
-  client.println (F("  cols: 50;"));
-  client.println (F("  wrap: off;"));
-  client.println (F("  background-color: lightgrey;"));
-  client.println ("}");
-	    
-	    /* Popup container */
-  client.println (F(".popup {"));
-  client.println (F("  position: relative;"));
-  client.println (F("  display: inline-block;"));
-  client.println (F("  cursor: pointer;"));
-  client.println ("}");
-
-/* The actual popup (appears on top) */
-  client.println (F(".popup .popuptext {"));
-  client.println (F("  visibility: hidden;"));
-  client.println (F("  width: 560px;"));
-  client.println (F("  height: 180px;"));
-  client.println (F("  background-color: #555;"));
-  client.println (F("  color: #fff;"));
-  client.println (F("  text-align: center;"));
-  client.println (F("  border-radius: 6px;"));
-  client.println (F("  padding: 8px 0;"));
-  client.println (F("  position: absolute;"));
-  client.println (F("  z-index: 1;"));
-  client.println (F("  bottom: 125%;"));
-  client.println (F("  left: 30%;"));
-  client.println (F("  margin-left: -80px;"));
-  client.println ("}");
-
-
-/* Popup arrow */
-  client.println (F(".popup .popuptext::after {"));
-  client.println (F("  content: "";"));
-  client.println (F("  position: absolute;"));
-  client.println (F("  top: 100%;"));
-  client.println (F("  left: 30%;"));
-  client.println (F("  margin-left: -5px;"));
-  client.println (F("  border-width: 5px;"));
-  client.println (F("  border-style: solid;"));
-  client.println (F("  border-color: #555 transparent \
-transparent transparent;"));
-  client.println ("}");
-
-/* Toggle this class when clicking on the
-   popup container (hide and show the popup) */
-  client.println (F(".popup .show {"));
-  client.println (F("  visibility: visible;"));
-  client.println ("}");
-
 
   client.println("th, td {");
   client.println(F("  padding-top: 0px;"));
@@ -550,86 +459,53 @@ frustration and you're to young to be bald. */
   client.println (F("</div>"));		// end time form
 
 
-	    /**** editor popup ****/
-
-  // http://arduino/?text={%22name%22%20:%20%22george%22;%22stuff%22%20:%20{%20%20%20%20%22thing%22%20:%20%22gadget;}}"
-
-  // %22 = doublequote
-  // $20 = space
-
-  // https://stackoverflow.com/questions/2367979/pass-post-data-with-window-location-href
-
-
-
-/* Javascript to send editor data to the Arduino */
 
   client.println (F("<script>"));
-  client.println (F("function saveText() {"));
+  client.println (F("function updateScript() {"));
 
   client.println (F("const XHR = new XMLHttpRequest();"));
 
-  client.println ("  var text = window.location.origin + \"?text=\" + \
-document.getElementById('editor').value;");
+  client.println ("  var fn = document.getElementById('fname').value");
+
+  client.println ("  if (0 == fn.length) {");
+  client.println ("    alert('It helps if you provide a name.')");
+  client.println ("    return;");
+  client.println ("  }");
+
+  client.println ("  var text = window.location.origin + \"?script=\" + \
+fn + \
+';pdx='      + position.pdx.value + \
+';pdy='      + position.pdy.value + \
+';pdz='      + position.pdz.value +   \
+';proll='    + position.proll.value +  \
+';ppitch='   + position.ppitch.value + \
+';pyaw='     + position.pyaw.value +   \
+';jdx='      + jitter.jdx.value +      \
+';jdy='      + jitter.jdy.value +      \
+';jdz='      + jitter.jdz.value +      \
+';jroll='    + jitter.jroll.value +    \
+';jpitch='   + jitter.jpitch.value +   \
+';jyaw='     + jitter.jyaw.value +     \
+';onset='    + time.onset.value +      \
+';relax='    + time.relax.value +      \
+';interval=' + time.interval.value     \
+");
   client.println (F("XHR.open('POST', text);"));
   client.println (F("XHR.setRequestHeader('Content-Type', 'text/plain');"));
   client.println (F("XHR.send();"));
 
-  client.println (F("}"));
- 
-/* Javascript to just close the editor window */
+  client.println ("}");
+  client.println (F("</script>"));	
 
-  client.println (F("function abandonText() {"));
-  client.println (F("  window.location.href = window.location.origin;"));
-  client.println (F("  return false;"));
-  client.println (F("}"));
-  client.println (F("</script>"));
-
-
-/* code to put the editor window and controls up */
-
-   client.println (F("<div class=\"popup\" \
-onclick=\"showEditor()\">Open editor"));
-
-  client.println (F("<span class=\"popuptext\" id=\"myPopup\" \
-style=\"width:560px\">"));
-
-  client.println (F("<textarea id=\"editor\" rows=\"9\" cols=\"20\" \
-    method=\"post\" name=\"george\" wrap=\"off\" \
-style=\"width:512px;minWidth=512px;\
-height=360px;minHeight=180px;\
-background-color=lightgrey\"></textarea><br>"));
-
-  client.println (F("<button type=\"button\" \
-onclick=\"abandonText();\">Abandon</button>"));
-
-  client.println (F("<button type=\"button\" \
-onclick=\"saveText();\">Save</button>"));
-
+  client.println (F("<div>"));
+  client.println (F("<label for=\"fname\">Script</label>"));
+  client.println (F("<input type=\text\" id=\"fname\" name=\"fname\"/>"));
+  client.println (F("<input type=\"button\" value=\"Save\" \
+onclick=\"updateScript()\">"));
   client.println (F("</div>"));
-
-
   
-
-  
-  
-#if 0
-  /********* upload form *******/
-  
-  client.println ("<div>");
-  client.println ("<form id=\"uploadbanner\" \
-enctype=\"multipart/form-data\" method=\"post\" action=\"#\">");
-  client.println ("  <input id=\"fileupload\" \
-name=\"myfile\" type=\"file\" \
-accept=\"text/plain,application/json.application/xml\"/>");
-  client.println ("  <input type=\"submit\" value=\"submit\" \
-id=\"submit\" />");
-  client.println ("</form>");
-  client.println ("</div>");
-#endif
-
-
 	    /***** end of forms ********/
-}
+}	// end buildPage
 
 #if 0
 
@@ -707,7 +583,7 @@ void loop() {
       if (client.available()) {     // if there's bytes to read from the client,
 	
         char c = client.read();     // read a byte, then
-	//	Serial.print (c);
+	Serial.print (c);
         if (c == '\n') {            // if the byte is a newline character
           if (currentLine.length() == 0) {
 	    // if it's blank line, no more input and go ahead and build the
